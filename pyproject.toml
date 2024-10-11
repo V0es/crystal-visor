@@ -1,0 +1,31 @@
+[tool.poetry]
+name = "crystallvisor"
+version = "0.1.0"
+description = ""
+authors = ["v0es <markkikov@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+numpy = "^2.1.1"
+opencv-python = "^4.10.0.84"
+matplotlib = "^3.9.2"
+pyqt6 = "^6.7.1"
+pymodbus = "^3.7.2"
+pyserial = "^3.5"
+
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.6.9"
+pre-commit = "^4.0.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+line-length = 88
+select = ["E", "F", "W"]
+ignore = ["E203", "E501"]
+exclude = ["migrations/", "tests/"]
+fix = true

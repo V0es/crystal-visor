@@ -1,0 +1,1 @@
+from .settings_panel_ui import Ui_settings_panel
