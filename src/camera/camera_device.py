@@ -26,9 +26,9 @@ class CameraDevice(QObject):
         if not self.capture:
             return
 
-        if not self.capture.isOpened():
-            # TODO: move address to config
-            self.capture.open("rtsp://admin:admin@192.168.0.99:554/main")
+        # if not self.capture.isOpened():
+        #     # TODO: move address to config
+        #     self.capture.open("rtsp://admin:admin@192.168.0.99:554/main")
         ret, image = self.capture.read()
         self.last_image = image
         self.capture.release()
@@ -46,11 +46,13 @@ class CameraDevice(QObject):
 
     def connect_camera(self, connection_params: CameraConnection):
         self._init_camera(connection_params)
+        print('trying to connect camera')
         try:
             self.capture.open()
             self.opened.emit()
-        except Exception as e:
+        except cv2.error as e:
             print('unlucky')
+            print(e)
 
     # !!TEMPORARY!! TODO: move to separate module
     @staticmethod

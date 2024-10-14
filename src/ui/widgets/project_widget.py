@@ -53,3 +53,4 @@ class ProjectWidget(QWidget):
 
         self.timer.timer_updated.connect(self.control_panel.update_timer_label)
         self.timer.timer_updated.connect(self.trm.get_current_values)
+        self.timer.timer_updated.connect(self.camera.capture_image)
