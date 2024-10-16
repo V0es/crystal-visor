@@ -5,13 +5,14 @@ class TimerControl(QObject):
     timer_updated = pyqtSignal(QTime)
     timer_stopped = pyqtSignal()
 
-    def __init__(self, parent=None):
+    def __init__(self, time_interval: int = 1000, parent=None):
 
         super().__init__(parent)
 
         self.timer = QTimer(self)
+        self.time_interval = time_interval
         self.current_time = QTime(0, 0, 0)
-        self.timer.setInterval(1000)
+        self.timer.setInterval(time_interval)
 
         self.connect_signals()
 
@@ -21,7 +22,7 @@ class TimerControl(QObject):
     @pyqtSlot()
     def start_timer(self):
         if not self.timer.isActive():
-            self.timer.start(1000)
+            self.timer.start(self.time_interval)
         print('started')
 
     @pyqtSlot()
@@ -32,7 +33,7 @@ class TimerControl(QObject):
 
     @pyqtSlot()
     def update_time(self):
-        self.current_time = self.current_time.addSecs(1)
+        self.current_time = self.current_time.addSecs(self.time_interval // 1000)
         self.timer_updated.emit(self.current_time)
 
     @pyqtSlot()
