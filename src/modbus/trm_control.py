@@ -19,6 +19,9 @@ class TRM(QObject):
         self.modbus_client: ModbusSerialClient | None = None
         self.device_params: ModbusParams | None = None
 
+        self.current_values_buffer: DeviceValues | None = None
+        self.current_temperature_program_buffer: TemperatureProgram | None = None
+
     def _init_device(self, modbus_params: ModbusParams):
         self.modbus_client = ModbusSerialClient(
             port=modbus_params.serial_port,
@@ -64,11 +67,17 @@ class TRM(QObject):
         self.temperature_program_updated.emit()
 
     def _get_current_temperature_program(self) -> TemperatureProgram:
-        registers = self.modbus_client.read_input_registers(
-            257,
-            4,
-            self.device_params.slave_id
-        ).registers
+        try:
+            registers = self.modbus_client.read_input_registers(
+                257,
+                4,
+                self.device_params.slave_id
+            ).registers
+        except AttributeError:
+            if self.current_temperature_program_buffer:
+                return self.current_temperature_program_buffer
+            else:
+                registers = [0, 0, 0, 0]
 
         program = TemperatureProgram(
             target_temperature=registers[0],
@@ -83,15 +92,24 @@ class TRM(QObject):
         print('getting device values')
         if not self.modbus_client or not self.modbus_client.connected:
             return
-        device_state = self.modbus_client.read_input_registers(
-            17,
-            1,
-            self.device_params.slave_id).registers[0]
 
-        current_temperature = self.modbus_client.read_input_registers(
-            2,
-            1,
-            self.device_params.slave_id).registers[0]
+        try:
+            device_state = self.modbus_client.read_input_registers(
+                17,
+                1,
+                self.device_params.slave_id).registers[0]
+
+            current_temperature = self.modbus_client.read_input_registers(
+                2,
+                1,
+                self.device_params.slave_id).registers[0]
+        except AttributeError:
+            if self.current_values_buffer:
+                return self.current_values_buffer
+            else:
+                device_state = 0
+                current_temperature = 0
+
         current_program = self._get_current_temperature_program()
 
         device_values = DeviceValues(device_state, current_program, current_temperature)
