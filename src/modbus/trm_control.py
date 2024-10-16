@@ -49,6 +49,7 @@ class TRM(QObject):
     @pyqtSlot(TemperatureProgram)
     def set_new_temperature_program(self, temperature: TemperatureProgram):
         print('set new program')
+        print(temperature)
         if not self.modbus_client or not self.modbus_client.connected:
             return
 

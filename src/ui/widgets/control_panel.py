@@ -43,7 +43,7 @@ class ControlPanel(QWidget, Ui_control_panel):
             target_temperature=self.new_temperature_spinbox.value(),
             point_position=self.new_point_position_spinbox.value(),
             raising_time=self.new_raising_time_spinbox.value(),
-            holding_time=self.new_raising_time_spinbox.value()
+            holding_time=self.new_holding_time_spinbox.value()
         )
         self.temperature_program_ready.emit(new_program)
 

@@ -7,7 +7,7 @@ from .control_panel import ControlPanel
 
 from src.utils.timer import TimerControl
 
-DEBUG = True
+DEBUG = False
 
 if DEBUG:
     from test.mock.trm_mock import TrmMock as TRM
