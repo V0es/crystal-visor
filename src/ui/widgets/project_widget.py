@@ -1,15 +1,24 @@
+from PyQt6.QtCore import pyqtSlot
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout
 
 from .display_panel import DisplayPanel
 from .settings_panel import SettingsPanel
 from .control_panel import ControlPanel
 
-from src.modbus import TRM
-from src.camera import CameraDevice
 from src.utils.timer import TimerControl
+
+DEBUG = True
+
+if DEBUG:
+    from test.mock.trm_mock import TrmMock as TRM
+    from test.mock.camera_mock import CameraMock as CameraDevice
+else:
+    from src.modbus import TRM
+    from src.camera import CameraDevice
 
 
 class ProjectWidget(QWidget):
+
     def __init__(self, parent=None):
         super().__init__(parent)
 
@@ -17,9 +26,11 @@ class ProjectWidget(QWidget):
         self.settings_panel = SettingsPanel()
         self.display_panel = DisplayPanel()
 
-        self.trm = TRM()
+        self.trm = TRM(self)
         self.camera = CameraDevice()
-        self.timer = TimerControl()
+        self.camera_timer = TimerControl(5000, self)
+        self.trm_timer = TimerControl(5000, self)
+        self.label_timer = TimerControl(1000, self)
 
         self.setup_ui()
         self.connect_signals()
@@ -41,16 +52,26 @@ class ProjectWidget(QWidget):
         self.settings_panel.camera_connect.connect(self.camera.connect_camera)
 
         self.trm.device_connected.connect(self.settings_panel.update_modbus_connection_state)
+        self.trm.device_connected.connect(self.trm_timer.start_timer)
         self.trm.device_values_ready.connect(self.display_panel.update_device_values)
 
-        self.camera.opened.connect(self.settings_panel.update_camera_connection_state)
+        self.trm_timer.timer_updated.connect(self.trm.get_current_values)
 
-        self.control_panel.start_process_btn.clicked.connect(self.timer.start_timer)
-        self.control_panel.pause_process_btn.clicked.connect(self.timer.pause_timer)
-        self.control_panel.stop_process_btn.clicked.connect(self.timer.stop_timer)
+        self.camera.opened.connect(self.settings_panel.update_camera_connection_state)
+        self.camera.current_height_ready.connect(self.control_panel.auto_update_temperature_program)
+
+        self.control_panel.start_process_btn.clicked.connect(self.camera_timer.start_timer)
+        self.control_panel.start_process_btn.clicked.connect(self.label_timer.start_timer)
+
+        self.control_panel.pause_process_btn.clicked.connect(self.camera_timer.pause_timer)
+        self.control_panel.pause_process_btn.clicked.connect(self.label_timer.pause_timer)
+
+        self.control_panel.stop_process_btn.clicked.connect(self.camera_timer.stop_timer)
+        self.control_panel.stop_process_btn.clicked.connect(self.label_timer.stop_timer)
+        self.control_panel.stop_process_btn.clicked.connect(lambda: self.trm.set_running_state(False))
+
         self.control_panel.temperature_program_ready.connect(self.trm.set_new_temperature_program)
         self.control_panel.adjustment_delta_ready.connect(self.trm.adjust_temperature)
 
-        self.timer.timer_updated.connect(self.control_panel.update_timer_label)
-        self.timer.timer_updated.connect(self.trm.get_current_values)
-        self.timer.timer_updated.connect(self.camera.capture_image)
+        self.label_timer.timer_updated.connect(self.control_panel.update_timer_label)
+        self.camera_timer.timer_updated.connect(self.camera.capture_image)

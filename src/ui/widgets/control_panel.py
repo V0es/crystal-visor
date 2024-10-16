@@ -54,4 +54,4 @@ class ControlPanel(QWidget, Ui_control_panel):
 
         adjusted_delta_temp = current_height * self.delta_temperature_dspinbox.value()
 
-        self.adjustment_delta_ready(adjusted_delta_temp)
+        self.adjustment_delta_ready.emit(adjusted_delta_temp)

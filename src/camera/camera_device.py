@@ -19,6 +19,8 @@ class CameraDevice(QObject):
         self.capture = None
         self.last_image = None
 
+        self.connect_signals()
+
     def connect_signals(self):
         self.image_ready.connect(self.get_current_height)
 
