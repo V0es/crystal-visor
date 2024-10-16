@@ -12,7 +12,7 @@ from PyQt6 import QtCore, QtGui, QtWidgets
 class Ui_control_panel(object):
     def setupUi(self, control_panel):
         control_panel.setObjectName("control_panel")
-        control_panel.resize(300, 410)
+        control_panel.resize(317, 412)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -117,9 +117,6 @@ class Ui_control_panel(object):
         self.set_new_values_btn = QtWidgets.QPushButton(parent=control_panel)
         self.set_new_values_btn.setObjectName("set_new_values_btn")
         self.verticalLayout.addWidget(self.set_new_values_btn)
-        self.start_preheat_btn = QtWidgets.QPushButton(parent=control_panel)
-        self.start_preheat_btn.setObjectName("start_preheat_btn")
-        self.verticalLayout.addWidget(self.start_preheat_btn)
 
         self.retranslateUi(control_panel)
         QtCore.QMetaObject.connectSlotsByName(control_panel)
@@ -140,7 +137,6 @@ class Ui_control_panel(object):
         self.pause_process_btn.setText(_translate("control_panel", "Пауза"))
         self.stop_process_btn.setText(_translate("control_panel", "Стоп"))
         self.set_new_values_btn.setText(_translate("control_panel", "Записать"))
-        self.start_preheat_btn.setText(_translate("control_panel", "Преднагрев"))
 
 
 if __name__ == "__main__":

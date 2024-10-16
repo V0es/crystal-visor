@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>300</width>
-    <height>410</height>
+    <width>317</width>
+    <height>412</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -211,13 +211,6 @@
     <widget class="QPushButton" name="set_new_values_btn">
      <property name="text">
       <string>Записать</string>
-     </property>
-    </widget>
-   </item>
-   <item>
-    <widget class="QPushButton" name="start_preheat_btn">
-     <property name="text">
-      <string>Преднагрев</string>
      </property>
     </widget>
    </item>
