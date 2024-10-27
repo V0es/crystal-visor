@@ -1,3 +1,5 @@
+import logging
+
 from PyQt6.QtCore import pyqtSlot
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout
 
@@ -7,7 +9,9 @@ from .control_panel import ControlPanel
 
 from src.utils.timer import TimerControl
 
-DEBUG = False
+DEBUG = True
+
+logger = logging.getLogger(__name__)
 
 if DEBUG:
     from test.mock.trm_mock import TrmMock as TRM
@@ -15,6 +19,8 @@ if DEBUG:
 else:
     from src.modbus import TRM
     from src.camera import CameraDevice
+
+logger.warning(f'DEBUG option is set to {DEBUG}')
 
 
 class ProjectWidget(QWidget):

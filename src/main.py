@@ -1,3 +1,5 @@
+import logging
+
 from PyQt6.QtWidgets import QMainWindow, QApplication, QGridLayout, QWidget, QHBoxLayout, QVBoxLayout
 from ui.widgets import ProjectWidget
 
@@ -16,14 +18,19 @@ class CrystalVisor(QMainWindow):
 
         self.setCentralWidget(self.project_widget)
 
-
     def connect_signals(self):
         ...
 
 
-app = QApplication([])
-window = CrystalVisor()
+if __name__ == '__main__':
+    logging.basicConfig(
+        filename='journal.log',
+        level=logging.DEBUG,
+        format='%(asctime)s:%(name)s:%(levelname)s:%(message)s',
+        encoding='utf-8')
+    app = QApplication([])
+    window = CrystalVisor()
 
-window.show()
+    window.show()
 
-app.exec()
+    app.exec()

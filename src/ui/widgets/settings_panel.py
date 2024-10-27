@@ -1,3 +1,5 @@
+import logging
+
 from PyQt6.QtCore import pyqtSlot, QRegularExpression, pyqtSignal
 from PyQt6.QtGui import QRegularExpressionValidator, QIntValidator
 from PyQt6.QtWidgets import QWidget
@@ -6,6 +8,8 @@ from .resource.settings_panel import Ui_settings_panel
 from src.utils.serial import available_serial_ports
 from src.modbus.dataframes.modbus_params import ModbusParams
 from src.camera.camera_connection_settings import CameraConnection
+
+logger = logging.getLogger(__name__)
 
 
 class SettingsPanel(QWidget, Ui_settings_panel):
@@ -63,6 +67,7 @@ class SettingsPanel(QWidget, Ui_settings_panel):
     @pyqtSlot()
     def update_available_serial_ports(self):
         available_ports = available_serial_ports()
+        logger.info(f'got available serial ports: {available_ports}')
 
         # TODO: optimize loop
         for i in range(self.serial_port_combo.count()):
@@ -70,7 +75,7 @@ class SettingsPanel(QWidget, Ui_settings_panel):
 
         self.serial_port_combo.addItems(available_ports)
 
-        print('updated com ports')
+        logger.info('updated com ports')
 
     @pyqtSlot()
     def connect_to_modbus_device(self):

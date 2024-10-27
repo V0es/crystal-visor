@@ -1,3 +1,5 @@
+import logging
+
 from PyQt6.QtCore import QObject, pyqtSignal, pyqtSlot
 
 from pymodbus.client import ModbusSerialClient
@@ -5,6 +7,8 @@ from pymodbus.client import ModbusSerialClient
 from src.modbus.dataframes.device_values import DeviceValues
 from src.modbus.dataframes.temperature_program import TemperatureProgram
 from src.modbus.dataframes.modbus_params import ModbusParams
+
+logger = logging.getLogger(__name__)
 
 
 class TRM(QObject):
@@ -35,22 +39,23 @@ class TRM(QObject):
     @pyqtSlot(ModbusParams)
     def connect_device(self, modbus_params: ModbusParams):
         self._init_device(modbus_params)
-        print('trying to connect modbus')
+        logger.info('connecting to modbus')
         state = self.modbus_client.connect()
+        logger.info(f'connection status {state}')
         self.device_connected.emit(state)
 
     @pyqtSlot(float)
     def adjust_temperature(self, delta_temp: float):
-        print('auto adjusting')
         program = self._get_current_temperature_program()
         program.target_temperature += delta_temp
+        logger.info(f'adjusting temperature for {delta_temp}')
         self.set_new_temperature_program(program)
 
     @pyqtSlot(TemperatureProgram)
     def set_new_temperature_program(self, temperature: TemperatureProgram):
-        print('set new program')
-        print(temperature)
+        logger.info('setting new temperature program')
         if not self.modbus_client or not self.modbus_client.connected:
+            logger.warning('no modbus client or modbus client is not connected')
             return
 
         # TODO: come up with a idea of storing registers
@@ -68,6 +73,7 @@ class TRM(QObject):
         self.temperature_program_updated.emit()
 
     def _get_current_temperature_program(self) -> TemperatureProgram:
+        logger.info('getting current temperature program')
         try:
             registers = self.modbus_client.read_input_registers(
                 257,
@@ -75,6 +81,7 @@ class TRM(QObject):
                 self.device_params.slave_id
             ).registers
         except AttributeError:
+            logger.error('unable to get current temperature program')
             if self.current_temperature_program_buffer:
                 return self.current_temperature_program_buffer
             else:
@@ -90,7 +97,7 @@ class TRM(QObject):
 
     @pyqtSlot()
     def get_current_values(self):
-        print('getting device values')
+        logger.info('getting device values')
         if not self.modbus_client or not self.modbus_client.connected:
             return
 
@@ -105,6 +112,7 @@ class TRM(QObject):
                 1,
                 self.device_params.slave_id).registers[0]
         except AttributeError:
+            logger.error('unable to get current values')
             if self.current_values_buffer:
                 return self.current_values_buffer
             else:
@@ -118,5 +126,5 @@ class TRM(QObject):
         self.device_values_ready.emit(device_values)
 
     def set_running_state(self, running_state: bool):
-        print('setting running state')
+        logger.info('setting running state')
         self.modbus_client.write_coil(80, running_state, self.device_params.slave_id)

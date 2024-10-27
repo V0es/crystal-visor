@@ -1,8 +1,10 @@
 import sys
 import glob
 from typing import List
-
+import logging
 import serial
+
+logger = logging.getLogger(__name__)
 
 
 def available_serial_ports() -> List[str]:

@@ -1,10 +1,13 @@
 from collections import Counter
+import logging
 
 import cv2
 import numpy as np
 from PyQt6.QtCore import QObject, pyqtSignal, pyqtSlot
 
 from .camera_connection_settings import CameraConnection
+
+logger = logging.getLogger(__name__)
 
 
 class CameraDevice(QObject):
@@ -25,7 +28,9 @@ class CameraDevice(QObject):
         self.image_ready.connect(self.get_current_height)
 
     def capture_image(self):
+        logger.info('capturing image')
         if not self.capture:
+            logger.warning('no capture object')
             return
 
         # if not self.capture.isOpened():
@@ -37,6 +42,7 @@ class CameraDevice(QObject):
         self.image_ready.emit()
 
     def _init_camera(self, connection_params: CameraConnection):
+        logger.info('initializing capture')
         self.capture = cv2.VideoCapture(
             f'rtsp://{connection_params.username}:'
             f'{connection_params.password}@'
@@ -48,13 +54,12 @@ class CameraDevice(QObject):
 
     def connect_camera(self, connection_params: CameraConnection):
         self._init_camera(connection_params)
-        print('trying to connect camera')
         try:
+            logger.info('trying to connect camera')
             self.capture.open()
             self.opened.emit()
-        except cv2.error as e:
-            print('unlucky')
-            print(e)
+        except cv2.error as error:
+            logger.error(f'unable to connect camera: {error}')
 
     # !!TEMPORARY!! TODO: move to separate module
     @staticmethod
@@ -73,11 +78,11 @@ class CameraDevice(QObject):
         primitive_dict = self.analyze_image()
         result_dict = self.save_to_csv(primitive_dict, returned=True)
         current_height = list(result_dict.keys())[0] * 10
-        print('current height ready', current_height)
+        logger.info(f'current height ready: {current_height}')
         self.current_height_ready.emit(current_height)
 
     def analyze_image(self):
-        print('Analyzing...')
+        logger.info('analyzing image')
         im = self.last_image
         width, height = im.shape[1], im.shape[0]
 
