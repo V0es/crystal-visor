@@ -5,6 +5,10 @@ from .resource.control_panel import Ui_control_panel
 from src.modbus.dataframes.temperature_program import TemperatureProgram
 
 
+import logging
+logger = logging.getLogger(__name__)
+
+
 class ControlPanel(QWidget, Ui_control_panel):
     temperature_program_ready = pyqtSignal(TemperatureProgram)
     adjustment_delta_ready = pyqtSignal(float)
@@ -34,6 +38,7 @@ class ControlPanel(QWidget, Ui_control_panel):
         self.delta_adjustment_label.setEnabled(current_state)
         self.delta_temperature_dspinbox.setEnabled(current_state)
         self.delta_temperature_label.setEnabled(current_state)
+        logger.info(f'updated temperature adjustment availability to {current_state}')
 
     @pyqtSlot()
     def manual_update_temperature_program(self):

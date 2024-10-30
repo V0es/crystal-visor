@@ -1,4 +1,8 @@
+import logging
+
 from PyQt6.QtCore import QTimer, pyqtSlot, QTime, QObject, pyqtSignal
+
+logger = logging.getLogger(__name__)
 
 
 class TimerControl(QObject):
@@ -23,13 +27,14 @@ class TimerControl(QObject):
     def start_timer(self):
         if not self.timer.isActive():
             self.timer.start(self.time_interval)
-        print('started')
+
+        logger.info('timer started')
 
     @pyqtSlot()
     def pause_timer(self):
         if self.timer.isActive():
             self.timer.stop()
-        print('paused')
+        logger.info('paused')
 
     @pyqtSlot()
     def update_time(self):
@@ -45,4 +50,4 @@ class TimerControl(QObject):
         self.timer_updated.emit(self.current_time)
         self.timer_stopped.emit()
 
-        print('stopped')
+        logger.info('timer stopped')
