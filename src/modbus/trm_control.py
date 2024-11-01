@@ -1,24 +1,15 @@
 import logging
-from dataclasses import dataclass
-from enum import Enum
 from typing import List
 
 from PyQt6.QtCore import QObject, pyqtSignal, pyqtSlot
-
 from pymodbus.client import ModbusSerialClient
 
-from src.modbus.dataframes.device_values import DeviceValues
-from src.modbus.dataframes.temperature_program import TemperatureProgram
-from src.modbus.dataframes.modbus_params import ModbusParams
-from src.modbus.exceptions import ModbusConnectionLost, ReadRegistersError, ModbusBaseException
+from src.modbus.utils.dataframes.device_values import DeviceValues
+from src.modbus.utils.dataframes import TemperatureProgram
+from src.modbus.utils.dataframes import ModbusParams
+from src.modbus.exceptions import ReadRegistersError
 
 logger = logging.getLogger(__name__)
-
-
-@dataclass
-class DeviceAddress:
-    register_address: int
-    count: int = None
 
 
 class TRM(QObject):
@@ -58,7 +49,7 @@ class TRM(QObject):
 
     @pyqtSlot(float)
     def adjust_temperature(self, delta_temp: float):
-        program = self._get_current_temperature_program()
+        program = self.get_current_temperature_program()
         program.target_temperature += delta_temp
         logger.info(f'adjusting temperature for {delta_temp}')
         self.set_new_temperature_program(program)
@@ -84,95 +75,83 @@ class TRM(QObject):
         self.set_running_state(True)
         self.temperature_program_updated.emit()
 
-    def _get_current_temperature_program(self) -> TemperatureProgram:
+    def get_current_temperature_program(self) -> TemperatureProgram:
+        """
+        Get current temperature program parameters or read from buffer
+        :return: TemperatureProgram object composed of fetched parameters
+        """
         logger.info('getting current temperature program')
         try:
-            registers = self.modbus_client.read_input_registers(
-                257,
-                4,
-                self.device_params.slave_id
-            ).registers
-        except AttributeError:
-            logger.error('unable to get current temperature program')
-            if self.current_temperature_program_buffer:
-                return self.current_temperature_program_buffer
-            else:
-                registers = [0, 0, 0, 0]
+            registers = self._read_registers(257, 4, self.device_params.slave_id)
+            program = TemperatureProgram(*registers)
 
-        program = TemperatureProgram(
-            target_temperature=registers[0],
-            point_position=registers[1],
-            raising_time=registers[2],
-            holding_time=registers[3]
-        )
+        except ReadRegistersError:
+            logger.error('getting temperature program from buffer')
+            program = self.current_values_buffer.current_program
+
         return program
 
-    def _get_device_state(self) -> int | None:
-        device_state = None
-
+    def get_current_temperature(self) -> float | None:
+        """
+        Get thermocouple reading from TRM or get from buffer
+        :return: Current temperature
+        """
+        logger.info('getting current temperature')
         try:
-            device_state = self.read_registers(
-                17,
-                1,
-                self.device_params.slave_id)[0]
-        except ModbusBaseException as exception:
-            logger.error('failed to get device state')
-            if isinstance(exception, ModbusConnectionLost):
-                logger.error('no connection to modbus device')
-                self.modbus_connection_lost.emit()
-            elif isinstance(exception, ReadRegistersError):
-                logger.error('unable to read response registers')
-        return device_state
-
-    def _get_current_temperature(self) -> float | None:
-        current_temperature = None
-        try:
-            current_temperature = self.read_registers(
-                2,
-                1,
-                self.device_params.slave_id)[0]
-        except ModbusBaseException as exception:
-            logger.error('failed to get current temperature')
-            if isinstance(exception, ModbusConnectionLost):
-                logger.error('no connection to modbus device')
-                self.modbus_connection_lost.emit()
-            elif isinstance(exception, ReadRegistersError):
-                logger.error('unable to read response registers')
+            current_temperature = self._read_registers(2, 1, self.device_params.slave_id)[0]
+        except ReadRegistersError:
+            logger.error('getting current temperature from buffer')
+            current_temperature = self.current_values_buffer.current_temperature
         return current_temperature
 
+    def get_current_operation_mode(self) -> int:
+        """
+        Get current operating mode
+        0 - idle
+        1 - running
+        2 - critical error
+        3 - program ended
+        4 - PID autotuning
+        5 - waiting for PID autotuning
+        6 - PID autotuning ended
+        7 - setting
+
+        :return:
+        """
+        logger.info('getting device state')
+        try:
+            mode = self._read_registers(17, 1, self.device_params.slave_id)[0]
+        except ReadRegistersError:
+            logger.error('getting device state form buffer')
+            mode = self.current_values_buffer.current_operating_mode
+        return mode
+
     @pyqtSlot()
-    def get_current_values(self):
+    def get_current_values(self) -> None:
+        """
+        Collect values, compose to data object, update buffer and emit signal
+        :return: None
+        """
         logger.info('getting device values')
-        device_state = self.read_registers(
-            17,
-            1,
-            self.device_params.slave_id
-        )[0]
 
-        current_temperature = self.read_registers(
-            2,
-            1,
-            self.device_params.slave_id
-        )[0]
+        current_operating_mode = self.get_current_operation_mode()
+        current_temperature = self.get_current_temperature()
+        current_program = self.get_current_temperature_program()
 
-        except ModbusBaseException as exception:
-            if isinstance(exception, ModbusConnectionLost):
-                logger.error('no connection to modbus device')
-                self.modbus_connection_lost.emit()
-            if isinstance(exception, ReadRegistersError):
-                logger.error('unable to read response registers')
-
-            if self.current_values_buffer:
-                logger.warning('getting device values from buffer')
-                device_state = self.current_values_buffer.current_device_state
-                current_temperature = self.current_values_buffer.current_temperature
-
-        current_program = self._get_current_temperature_program()
-        device_values = DeviceValues(device_state, current_program, current_temperature)
+        device_values = DeviceValues(current_operating_mode, current_program, int(current_temperature))
+        self.current_values_buffer = device_values  # update buffer
 
         self.device_values_ready.emit(device_values)
 
-    def read_registers(self, address: int, count: int, slave_id: int) -> List[int] | None:
+    def _read_registers(self, address: int, count: int, slave_id: int) -> List[int] | None:
+        """
+        Read 'count' registers starting from 'address' from device with 'slave_id' id
+        Raises ReadRegistersError if response is invalid
+        :param address: Starting register address
+        :param count: Amount of registers to read
+        :param slave_id: Modbus device id
+        :return: List of registers
+        """
         logger.info('reading registers')
         if not self.modbus_client:
             return
@@ -186,10 +165,6 @@ class TRM(QObject):
             logger.error('unable to read response registers')
             raise ReadRegistersError
         return registers
-
-    def write_registers(self, ):
-        self.modbus_client.write_registers()
-
 
     def set_running_state(self, running_state: bool):
         logger.info('setting running state')
