@@ -13,20 +13,20 @@ DEBUG = True
 
 logger = logging.getLogger(__name__)
 
-if DEBUG:
-    from test.mock.trm_mock import TrmMock as TRM
-    from test.mock.camera_mock import CameraMock as CameraDevice
-else:
-    from src.modbus import TRM
-    from src.camera import CameraDevice
-
-logger.warning(f'DEBUG option is set to {DEBUG}')
-
 
 class ProjectWidget(QWidget):
 
     def __init__(self, parent=None):
         super().__init__(parent)
+
+        if DEBUG:
+            from test.mock.trm_mock import TrmMock as TRM
+            from test.mock.camera_mock import CameraMock as CameraDevice
+        else:
+            from src.modbus import TRM
+            from src.camera import CameraDevice
+
+        logger.warning(f'DEBUG option is set to {DEBUG}')
 
         self.control_panel = ControlPanel()
         self.settings_panel = SettingsPanel()
