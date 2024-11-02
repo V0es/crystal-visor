@@ -6,7 +6,7 @@ from PyQt6.QtWidgets import QWidget
 
 from .resource.settings_panel import Ui_settings_panel
 from src.utils.serial import available_serial_ports
-from src.modbus.dataframes.modbus_params import ModbusParams
+from src.modbus.utils.dataframes import ModbusParams
 from src.camera.camera_connection_settings import CameraConnection
 
 logger = logging.getLogger(__name__)
