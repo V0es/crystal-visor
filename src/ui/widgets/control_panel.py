@@ -2,7 +2,7 @@ from PyQt6.QtCore import pyqtSlot, QTime, pyqtSignal
 from PyQt6.QtWidgets import QWidget
 
 from .resource.control_panel import Ui_control_panel
-from src.modbus.dataframes.temperature_program import TemperatureProgram
+from src.modbus.utils.dataframes import TemperatureProgram
 
 
 import logging

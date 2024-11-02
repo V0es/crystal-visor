@@ -23,8 +23,10 @@ class CrystalVisor(QMainWindow):
 
 
 if __name__ == '__main__':
+    print('basic conf')
     logging.basicConfig(
         filename='journal.log',
+        filemode='w',
         level=logging.DEBUG,
         format='%(asctime)s:%(name)s:%(levelname)s:%(message)s',
         encoding='utf-8')

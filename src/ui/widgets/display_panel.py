@@ -2,8 +2,8 @@ from PyQt6.QtCore import pyqtSlot
 from PyQt6.QtWidgets import QWidget
 
 from .resource.display_panel import Ui_display_panel
-from src.modbus.dataframes.device_values import DeviceValues
-from src.modbus.dataframes.temperature_program import TemperatureProgram
+from src.modbus.utils.dataframes.device_values import DeviceValues
+from src.modbus.utils.dataframes import TemperatureProgram
 
 
 class DisplayPanel(QWidget, Ui_display_panel):
@@ -25,4 +25,4 @@ class DisplayPanel(QWidget, Ui_display_panel):
         self.current_temperature_lcd.display(
             device_values.current_temperature * 10 ** device_values.current_point_position
         )
-        self.device_state_lcd.display(device_values.current_device_state)
+        self.device_state_lcd.display(device_values.current_operating_mode)

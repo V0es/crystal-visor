@@ -2,7 +2,7 @@ import random
 import logging
 
 from src.modbus import TRM
-from src.modbus.dataframes import ModbusParams, TemperatureProgram, DeviceValues
+from src.modbus.utils.dataframes import ModbusParams, TemperatureProgram, DeviceValues
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +29,7 @@ class TrmMock(TRM):
         self.device_connected.emit(True)
 
     def adjust_temperature(self, delta_temp: float):
-        program = self._get_current_temperature_program()
+        program = self.get_current_temperature_program()
         logger.info('ADJUSTING TEMPERATURE PROGRAM')
         program.target_temperature += delta_temp
         self.set_new_temperature_program(program)
@@ -44,7 +44,7 @@ class TrmMock(TRM):
         self.set_running_state(True)
         self.temperature_program_updated.emit()
 
-    def _get_current_temperature_program(self) -> TemperatureProgram:
+    def get_current_temperature_program(self) -> TemperatureProgram:
         logger.info('GETTING CURRENT TEMP PROGRAM')
         program = TemperatureProgram(
             target_temperature=self.registers[257],
@@ -59,7 +59,7 @@ class TrmMock(TRM):
         self.registers[2] = random.randint(1500, 5000) / 100
         device_state = self.registers[17]
         current_temp = self.registers[2]
-        current_program = self._get_current_temperature_program()
+        current_program = self.get_current_temperature_program()
 
         device_values = DeviceValues(device_state, current_program, current_temp)
 
