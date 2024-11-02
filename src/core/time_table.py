@@ -116,8 +116,3 @@ class TimeTable:
         print(left_neighbor, right_neighbor)
 
         return left_neighbor, right_neighbor
-
-
-
-tt = TimeTable()
-tt.set_file(r"C:\Users\markk\PycharmProjects\crystal-visor\timetable")
