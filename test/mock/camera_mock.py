@@ -2,6 +2,9 @@ import random
 import time
 import logging
 
+import numpy as np
+from PyQt6.QtCore import pyqtSignal
+
 from src.camera.camera_connection_settings import CameraConnection
 from src.camera.camera_device import CameraDevice
 
@@ -9,12 +12,15 @@ logger = logging.getLogger(__name__)
 
 
 class CameraMock(CameraDevice):
+    image_ready = pyqtSignal(np.ndarray)
+
     def __init__(self, parent=None):
         super().__init__(parent)
 
     def capture_image(self):
         logger.info('CAPTURING IMAGE')
-        self.image_ready.emit()
+        image = np.ndarray([])
+        self.image_ready.emit(image)
 
     def _init_camera(self, connection_params: CameraConnection):
         logger.info('INITIALIZED CAMERA INSTANCE')
