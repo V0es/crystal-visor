@@ -19,7 +19,7 @@ class CameraMock(CameraDevice):
 
     def capture_image(self):
         logger.info('CAPTURING IMAGE')
-        image = np.ndarray([])
+        image = np.ndarray((1, 1))
         self.image_ready.emit(image)
 
     def _init_camera(self, connection_params: CameraConnection):
