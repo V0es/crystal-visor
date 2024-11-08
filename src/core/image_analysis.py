@@ -5,7 +5,7 @@ from typing import Dict
 
 import cv2
 import numpy as np
-from PyQt6.QtCore import QObject, pyqtSlot, pyqtSignal
+from PyQt6.QtCore import QObject, pyqtSlot, pyqtSignal, QThread
 
 logger = logging.getLogger(__name__)
 
@@ -26,15 +26,25 @@ class AnalysisSettings:
     base_height: float = 25
 
 
-class ImageAnalysis(QObject):
+class ImageAnalysisThread(QThread):
     delta_height_ready = pyqtSignal(float)
 
     def __init__(self, settings: AnalysisSettings = AnalysisSettings(), parent=None):
         super().__init__(parent)
+        self.image = None
         self.settings = settings
 
     def set_settings(self, new_settings: AnalysisSettings):
         self.settings = new_settings
+
+    def run(self):
+        if not self.image:
+            return
+        primitive_dict = self.analyze_image(self.image)
+        result_dict = self.save_to_csv(primitive_dict, returned=True)
+        current_height = list(result_dict.keys())[0] * 10
+        logger.info(f'current height ready: {current_height}')
+        self.delta_height_ready.emit(current_height - self.settings.base_height)
 
     @staticmethod
     def save_to_csv(result_dict, returned=False) -> Dict:
@@ -46,14 +56,6 @@ class ImageAnalysis(QObject):
                 dict_output[length] = certainty
         if dict_output:
             return dict_output
-
-    @pyqtSlot(np.ndarray)
-    def get_delta_height(self, image: np.ndarray) -> None:
-        primitive_dict = self.analyze_image(image)
-        result_dict = self.save_to_csv(primitive_dict, returned=True)
-        current_height = list(result_dict.keys())[0] * 10
-        logger.info(f'current height ready: {current_height}')
-        self.delta_height_ready.emit(current_height - self.settings.base_height)
 
     def analyze_image(self, image: np.ndarray) -> Counter:
         logger.info('analyzing image')
