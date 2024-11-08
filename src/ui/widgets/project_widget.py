@@ -1,5 +1,6 @@
 import logging
 
+import numpy as np
 from PyQt6.QtCore import pyqtSlot
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout
 
@@ -8,7 +9,7 @@ from .settings_panel import SettingsPanel
 from .control_panel import ControlPanel
 
 from src.utils.timer import TimerControl
-from src.core.image_analysis import ImageAnalysis
+from src.core.image_analysis import ImageAnalysisThread
 
 DEBUG = True
 
@@ -23,11 +24,11 @@ class ProjectWidget(QWidget):
         if DEBUG:
             from test.mock.trm_mock import TrmMock as TRM
             from test.mock.camera_mock import CameraMock as CameraDevice
-            from test.mock.image_analysis_mock import ImageAnalysisMock as ImageAnalysis
+            from test.mock.image_analysis_mock import ImageAnalysisMock as ImageAnalysisThread
         else:
             from src.modbus import TRM
             from src.camera import CameraDevice
-            from src.core.image_analysis import ImageAnalysis
+            from src.core.image_analysis import ImageAnalysisThread
 
         logger.warning(f'DEBUG option is set to {DEBUG}')
 
@@ -37,7 +38,7 @@ class ProjectWidget(QWidget):
 
         self.trm = TRM(self)
         self.camera = CameraDevice()
-        self.image_analysis = ImageAnalysis(parent=self)
+        self.image_analysis = ImageAnalysisThread()
         self.camera_timer = TimerControl(5000, self)
         self.trm_timer = TimerControl(5000, self)
         self.label_timer = TimerControl(1000, self)
@@ -57,6 +58,11 @@ class ProjectWidget(QWidget):
         layout.addWidget(self.control_panel)
         self.setLayout(layout)
 
+    @pyqtSlot(np.ndarray)
+    def send_image_to_analysis(self, image: np.ndarray):
+        self.image_analysis.image = image
+        self.image_analysis.run()
+
     def connect_signals(self):
         self.settings_panel.modbus_connect.connect(self.trm.connect_device)
         self.settings_panel.camera_connect.connect(self.camera.connect_camera)
@@ -68,7 +74,9 @@ class ProjectWidget(QWidget):
         self.trm_timer.timer_updated.connect(self.trm.get_current_values)
 
         self.camera.opened.connect(self.settings_panel.update_camera_connection_state)
-        self.camera.image_ready.connect(self.image_analysis.get_delta_height)
+        # START ANALYSIS
+        # TODO: make better
+        self.camera.image_ready.connect(self.send_image_to_analysis)
 
         self.image_analysis.delta_height_ready.connect(self.control_panel.auto_update_temperature_program)
 
