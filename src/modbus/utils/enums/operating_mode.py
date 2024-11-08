@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import IntEnum
 
 
-class OperatingMode(Enum):
+class OperatingMode(IntEnum):
     STOP = 0
     RUNNING = 1
     CRITICAL_ERROR = 2

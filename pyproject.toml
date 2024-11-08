@@ -27,5 +27,5 @@ build-backend = "poetry.core.masonry.api"
 line-length = 88
 select = ["E", "F", "W"]
 ignore = ["E203", "E501"]
-exclude = ["migrations/", "tests/"]
-fix = true
+exclude = ["migrations/", "tests/", "src/ui/**/resourse/"]
+fix = false
