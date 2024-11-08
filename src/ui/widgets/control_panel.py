@@ -53,10 +53,10 @@ class ControlPanel(QWidget, Ui_control_panel):
         self.temperature_program_ready.emit(new_program)
 
     @pyqtSlot(float)
-    def auto_update_temperature_program(self, current_height: float):
+    def auto_update_temperature_program(self, delta_height: float):
         if not self.auto_temp_adjustment_checkbox.isChecked():
             return
 
-        adjusted_delta_temp = current_height * self.delta_temperature_dspinbox.value()
+        adjusted_delta_temp = delta_height * self.delta_temperature_dspinbox.value()
 
         self.adjustment_delta_ready.emit(adjusted_delta_temp)

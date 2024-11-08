@@ -26,7 +26,7 @@ class TRM(QObject):
         self.modbus_client: ModbusSerialClient | None = None
         self.device_params: ModbusParams | None = None
 
-        self.current_values_buffer: DeviceValues | None = None
+        self.current_values_buffer: DeviceValues = DeviceValues()
         self.current_temperature_program_buffer: TemperatureProgram | None = None
 
     def _init_device(self, modbus_params: ModbusParams):
