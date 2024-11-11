@@ -5,7 +5,7 @@ from typing import Dict
 
 import cv2
 import numpy as np
-from PyQt6.QtCore import QObject, pyqtSlot, pyqtSignal, QThread
+from PyQt6.QtCore import QObject, pyqtSlot, pyqtSignal, QThread, QRunnable
 
 logger = logging.getLogger(__name__)
 
@@ -26,17 +26,22 @@ class AnalysisSettings:
     base_height: float = 25
 
 
-class ImageAnalysisThread(QThread):
+class WorkerSignals(QObject):
     delta_height_ready = pyqtSignal(float)
 
-    def __init__(self, settings: AnalysisSettings = AnalysisSettings(), parent=None):
-        super().__init__(parent)
+
+class ImageAnalysisWorker(QRunnable):
+
+    def __init__(self, image: np.ndarray, settings: AnalysisSettings = AnalysisSettings()):
+        super().__init__()
         self.image = None
+        self.signals = WorkerSignals()
         self.settings = settings
 
     def set_settings(self, new_settings: AnalysisSettings):
         self.settings = new_settings
 
+    @pyqtSlot()
     def run(self):
         if not self.image:
             return
@@ -44,7 +49,7 @@ class ImageAnalysisThread(QThread):
         result_dict = self.save_to_csv(primitive_dict, returned=True)
         current_height = list(result_dict.keys())[0] * 10
         logger.info(f'current height ready: {current_height}')
-        self.delta_height_ready.emit(current_height - self.settings.base_height)
+        self.signals.delta_height_ready.emit(current_height - self.settings.base_height)
 
     @staticmethod
     def save_to_csv(result_dict, returned=False) -> Dict:

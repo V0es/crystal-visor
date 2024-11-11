@@ -1,15 +1,22 @@
+import logging
 import random
+import time
 
-import numpy as np
-
-from src.core.image_analysis import ImageAnalysisThread
+from src.core.image_analysis import ImageAnalysisWorker
 
 
-class ImageAnalysisMock(ImageAnalysisThread):
-    def __init__(self, parent=None):
-        super().__init__(parent=parent)
+logger = logging.getLogger(__name__)
+
+
+class ImageAnalysisMock(ImageAnalysisWorker):
+    def __init__(self, image):
+        super().__init__(image)
 
     def run(self):
+        logger.info(f'CALCULATING DELTA HEIGHT')
         current_height = random.randint(25, 45)
-        self.delta_height_ready.emit(current_height - self.settings.base_height)
+        time.sleep(4)
+        delta_height = current_height - self.settings.base_height
+        logger.info(f'CALCULATED DELTA HEIGHT: {delta_height}')
+        self.signals.delta_height_ready.emit(delta_height)
 
