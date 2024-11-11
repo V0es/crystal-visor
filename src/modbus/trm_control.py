@@ -102,6 +102,7 @@ class TRM(QObject):
         logger.info('getting current temperature')
         try:
             current_temperature = self._read_registers(2, 1, self.device_params.slave_id)[0]
+            logger.info(f'current temperature: {current_temperature}')
         except ReadRegistersError:
             logger.error('getting current temperature from buffer')
             current_temperature = self.current_values_buffer.current_temperature
