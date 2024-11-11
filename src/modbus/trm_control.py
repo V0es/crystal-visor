@@ -3,6 +3,7 @@ from typing import List
 
 from PyQt6.QtCore import QObject, pyqtSignal, pyqtSlot
 from pymodbus.client import ModbusSerialClient
+from pymodbus.exceptions import ConnectionException
 
 from src.modbus.utils.dataframes.device_values import DeviceValues
 from src.modbus.utils.dataframes import TemperatureProgram
@@ -166,7 +167,11 @@ class TRM(QObject):
         if not self.modbus_client.connected:
             logger.error('no connection to modbus device')
             self.modbus_connection_lost.emit()
-        response = self.modbus_client.read_input_registers(address, count, slave_id)
+        try:
+            response = self.modbus_client.read_input_registers(address, count, slave_id)
+        except ConnectionException:
+            logger.error('lost connection to modbus device')
+            self.modbus_connection_lost.emit()
         try:
             registers = response.registers
         except AttributeError:
