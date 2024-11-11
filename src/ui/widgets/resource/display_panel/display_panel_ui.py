@@ -152,7 +152,7 @@ class Ui_display_panel(object):
         self.holding_time_label.setText(_translate("display_panel", "Время выдержки, мин"))
         self.current_temperature_label.setText(_translate("display_panel", "Текущая температура, °C"))
         self.device_state_label.setText(_translate("display_panel", "Состояние прибора"))
-        self.device_state_field.setText(_translate("display_panel", "IDLE"))
+        self.device_state_field.setText(_translate("display_panel", "Стоп"))
 
 
 if __name__ == "__main__":

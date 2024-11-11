@@ -28,7 +28,7 @@ class TRM(QObject):
         self.device_params: ModbusParams | None = None
 
         self.current_values_buffer: DeviceValues = DeviceValues()
-        self.current_temperature_program_buffer: TemperatureProgram | None = None
+        self.current_temperature_program_buffer: TemperatureProgram = TemperatureProgram()
 
     def _init_device(self, modbus_params: ModbusParams):
         self.modbus_client = ModbusSerialClient(
@@ -59,6 +59,7 @@ class TRM(QObject):
     def set_new_temperature_program(self, temperature: TemperatureProgram):
         logger.info('setting new temperature program')
         if not self.modbus_client or not self.modbus_client.connected:
+            self.modbus_connection_lost.emit()
             logger.warning('no modbus client or modbus client is not connected')
             return
 
@@ -139,7 +140,12 @@ class TRM(QObject):
         current_temperature = self.get_current_temperature()
         current_program = self.get_current_temperature_program()
 
-        device_values = DeviceValues(current_operating_mode, current_program, int(current_temperature))
+        device_values = DeviceValues(
+            current_operating_mode,
+            current_program,
+            int(current_temperature),
+            current_program.point_position
+        )
         self.current_values_buffer = device_values  # update buffer
 
         self.device_values_ready.emit(device_values)

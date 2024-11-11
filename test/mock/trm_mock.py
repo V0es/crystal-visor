@@ -82,7 +82,7 @@ class TrmMock(TRM):
     def _read_registers(self, address: int, count: int, slave_id: int) -> List[int] | None:
         regs = [self.registers[address + i] for i in range(count)]
 
-        return regs if random.random() > 0.1 else self.read_registers_error.emit()
+        return regs if random.random() > 0.05 else self.read_registers_error.emit()
 
     def get_current_temperature(self) -> float | None:
         logger.info('GETTING CURRENT TEMPERATURE')
