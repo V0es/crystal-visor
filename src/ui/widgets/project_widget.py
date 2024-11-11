@@ -66,36 +66,38 @@ class ProjectWidget(QWidget):
 
     def read_registers_error(self):
         # TODO: decide if registers error is needed
-        message = QMessageBox.warning(
-            self,
-            'Ошибка при чтении регистров',
-            'Не получилось прочитать регистры, взято значение из буффера',
-            QMessageBox.StandardButton.Ok
-        )
-
-        if message == QMessageBox.StandardButton.Ok:
-            return
-        pass
+        # message = QMessageBox.warning(
+        #     self,
+        #     'Ошибка при чтении регистров',
+        #     'Не получилось прочитать регистры, взято значение из буффера',
+        #     QMessageBox.StandardButton.Ok
+        # )
+        #
+        # if message == QMessageBox.StandardButton.Ok:
+        #     return
+        logger.error('READ REGISTERS ERROR DIALOG')
 
     def modbus_connection_lost(self):
-        message = QMessageBox.critical(
-            self,
-            'Потеряна связь с ТРМ',
-            'Не получилось подключиться к ТРМ',
-            QMessageBox.StandardButton.Ok
-        )
-        if message == QMessageBox.StandardButton.Ok:
-            return
+        # message = QMessageBox.critical(
+        #     self,
+        #     'Потеряна связь с ТРМ',
+        #     'Не получилось подключиться к ТРМ',
+        #     QMessageBox.StandardButton.Ok
+        # )
+        # if message == QMessageBox.StandardButton.Ok:
+        #     return
+        logger.error('MODBUS CONNECTION LOST DIALOG')
 
     def camera_connection_lost(self):
-        message = QMessageBox(
-            self,
-            'Потеряна связь с камерой',
-            'Не получилось подключиться к камере',
-            QMessageBox.StandardButton.Ok
-        )
-        if message == QMessageBox.StandardButton.Ok:
-            return
+        # message = QMessageBox(
+        #     self,
+        #     'Потеряна связь с камерой',
+        #     'Не получилось подключиться к камере',
+        #     QMessageBox.StandardButton.Ok
+        # )
+        # if message == QMessageBox.StandardButton.Ok:
+        #     return
+        logger.error('CAMERA CONNECTION LOST DIALOG')
 
     def connect_signals(self):
         self.settings_panel.modbus_connect.connect(self.trm.connect_device)
