@@ -65,8 +65,9 @@ class ProjectWidget(QWidget):
         self.analysis_threadpool.start(worker)
 
     def read_registers_error(self):
+        # TODO: decide if registers error is needed
         message = QMessageBox.warning(
-            self.parent(),
+            self,
             'Ошибка при чтении регистров',
             'Не получилось прочитать регистры, взято значение из буффера',
             QMessageBox.StandardButton.Ok
@@ -74,10 +75,11 @@ class ProjectWidget(QWidget):
 
         if message == QMessageBox.StandardButton.Ok:
             return
+        pass
 
     def modbus_connection_lost(self):
         message = QMessageBox.critical(
-            self.parent(),
+            self,
             'Потеряна связь с ТРМ',
             'Не получилось подключиться к ТРМ',
             QMessageBox.StandardButton.Ok
@@ -86,8 +88,8 @@ class ProjectWidget(QWidget):
             return
 
     def camera_connection_lost(self):
-        message = QMessageBox.critical(
-            self.parent(),
+        message = QMessageBox(
+            self,
             'Потеряна связь с камерой',
             'Не получилось подключиться к камере',
             QMessageBox.StandardButton.Ok
@@ -99,6 +101,7 @@ class ProjectWidget(QWidget):
         self.settings_panel.modbus_connect.connect(self.trm.connect_device)
         self.settings_panel.camera_connect.connect(self.camera.connect_camera)
 
+        # Error message boxes
         self.trm.modbus_connection_lost.connect(self.modbus_connection_lost)
         self.trm.read_registers_error.connect(self.read_registers_error)
         self.camera.connection_lost.connect(self.camera_connection_lost)
