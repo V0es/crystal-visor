@@ -1,7 +1,9 @@
 import random
 import logging
+from typing import List
 
 from src.modbus import TRM
+from src.modbus.exceptions import ReadRegistersError
 from src.modbus.utils.dataframes import ModbusParams, TemperatureProgram, DeviceValues
 
 logger = logging.getLogger(__name__)
@@ -18,6 +20,8 @@ class TrmMock(TRM):
             259: 0,
             260: 0
         }
+        self.current_values_buffer: DeviceValues = DeviceValues()
+        self.current_temperature_program_buffer: TemperatureProgram = TemperatureProgram()
 
     def _init_device(self, modbus_params: ModbusParams):
         logger.info('CREATED MODBUS_CLIENT INSTANCE')
@@ -45,23 +49,26 @@ class TrmMock(TRM):
         self.temperature_program_updated.emit()
 
     def get_current_temperature_program(self) -> TemperatureProgram:
-        logger.info('GETTING CURRENT TEMP PROGRAM')
-        program = TemperatureProgram(
-            target_temperature=self.registers[257],
-            point_position=self.registers[258],
-            raising_time=self.registers[259],
-            holding_time=self.registers[260]
-        )
+        logger.info('GETTING CURRENT TEMPERATURE PROGRAM')
+        try:
+            registers = self._read_registers(257, 4, self.device_params.slave_id)
+            program = TemperatureProgram(*registers)
+
+        except TypeError:
+            logger.error('GETTING TEMPERATURE PROGRAM FROM BUFFER')
+            program = self.current_values_buffer.current_program
+
         return program
 
     def get_current_values(self):
         logger.info('GETTING DEVICE VALUES')
         self.registers[2] = random.randint(1500, 5000) / 100
-        device_state = self.registers[17]
-        current_temp = self.registers[2]
+        current_operating_mode = self.get_current_operation_mode()
+        current_temperature = self.get_current_temperature()
         current_program = self.get_current_temperature_program()
 
-        device_values = DeviceValues(device_state, current_program, current_temp)
+        device_values = DeviceValues(current_operating_mode, current_program, int(current_temperature))
+        self.current_values_buffer = device_values  # update buffer
 
         self.device_values_ready.emit(device_values)
 
@@ -71,3 +78,26 @@ class TrmMock(TRM):
             self.registers[17] = 1
         else:
             self.registers[17] = 0
+
+    def _read_registers(self, address: int, count: int, slave_id: int) -> List[int] | None:
+        regs = [self.registers[address + i] for i in range(count)]
+
+        return regs if random.random() > 0.05 else None
+
+    def get_current_temperature(self) -> float | None:
+        logger.info('GETTING CURRENT TEMPERATURE')
+        try:
+            current_temperature = self._read_registers(2, 1, self.device_params.slave_id)[0]
+        except TypeError:
+            logger.error('GETTING CURRENT TEMPERATURE FROM BUFFER')
+            current_temperature = self.current_values_buffer.current_temperature
+        return current_temperature
+
+    def get_current_operation_mode(self) -> int:
+        logger.info('GETTING DEVICE STATE')
+        try:
+            mode = self._read_registers(17, 1, self.device_params.slave_id)[0]
+        except TypeError:
+            logger.error('GETTING DEVICE STATE FORM BUFFER')
+            mode = self.current_values_buffer.current_operating_mode
+        return mode
