@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file 'control_panel.ui'
+# Form implementation generated from reading ui file '.\control_panel.ui'
 #
 # Created by: PyQt6 UI code generator 6.7.1
 #
@@ -128,8 +128,8 @@ class Ui_control_panel(object):
         self.time_label.setText(_translate("control_panel", "00:00:00"))
         self.new_temp_label.setText(_translate("control_panel", "Температура, °С"))
         self.new_point_position_label.setText(_translate("control_panel", "Дес. точка"))
-        self.new_raising_time_label.setText(_translate("control_panel", "Время роста, с"))
-        self.new_holding_time_label.setText(_translate("control_panel", "Время выдержки, с"))
+        self.new_raising_time_label.setText(_translate("control_panel", "Время роста, мин"))
+        self.new_holding_time_label.setText(_translate("control_panel", "Время выдержки, мин"))
         self.auto_temp_adjustment_checkbox.setText(_translate("control_panel", "Автоматически регулировать температуру"))
         self.delta_adjustment_label.setText(_translate("control_panel", "Регулирование"))
         self.delta_temperature_label.setText(_translate("control_panel", "Δ, °С"))

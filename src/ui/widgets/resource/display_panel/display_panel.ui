@@ -117,7 +117,7 @@
         </sizepolicy>
        </property>
        <property name="text">
-        <string>Время роста, с</string>
+        <string>Время роста, мин</string>
        </property>
       </widget>
      </item>
@@ -146,7 +146,7 @@
         </sizepolicy>
        </property>
        <property name="text">
-        <string>Время выдержки, с</string>
+        <string>Время выдержки, мин</string>
        </property>
       </widget>
      </item>
@@ -212,18 +212,12 @@
       </widget>
      </item>
      <item row="7" column="1">
-      <widget class="QLCDNumber" name="device_state_lcd">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
+      <widget class="QLabel" name="device_state_field">
+       <property name="text">
+        <string>IDLE</string>
        </property>
-       <property name="frameShadow">
-        <enum>QFrame::Plain</enum>
-       </property>
-       <property name="segmentStyle">
-        <enum>QLCDNumber::Flat</enum>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
        </property>
       </widget>
      </item>

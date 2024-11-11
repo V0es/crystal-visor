@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file 'display_panel.ui'
+# Form implementation generated from reading ui file '.\display_panel.ui'
 #
 # Created by: PyQt6 UI code generator 6.7.1
 #
@@ -133,16 +133,10 @@ class Ui_display_panel(object):
         self.device_state_label.setSizePolicy(sizePolicy)
         self.device_state_label.setObjectName("device_state_label")
         self.display_layout.setWidget(7, QtWidgets.QFormLayout.ItemRole.LabelRole, self.device_state_label)
-        self.device_state_lcd = QtWidgets.QLCDNumber(parent=display_panel)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.MinimumExpanding, QtWidgets.QSizePolicy.Policy.MinimumExpanding)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.device_state_lcd.sizePolicy().hasHeightForWidth())
-        self.device_state_lcd.setSizePolicy(sizePolicy)
-        self.device_state_lcd.setFrameShadow(QtWidgets.QFrame.Shadow.Plain)
-        self.device_state_lcd.setSegmentStyle(QtWidgets.QLCDNumber.SegmentStyle.Flat)
-        self.device_state_lcd.setObjectName("device_state_lcd")
-        self.display_layout.setWidget(7, QtWidgets.QFormLayout.ItemRole.FieldRole, self.device_state_lcd)
+        self.device_state_field = QtWidgets.QLabel(parent=display_panel)
+        self.device_state_field.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+        self.device_state_field.setObjectName("device_state_field")
+        self.display_layout.setWidget(7, QtWidgets.QFormLayout.ItemRole.FieldRole, self.device_state_field)
         self.verticalLayout.addLayout(self.display_layout)
 
         self.retranslateUi(display_panel)
@@ -154,10 +148,11 @@ class Ui_display_panel(object):
         self.title_label.setText(_translate("display_panel", "Текущие значения"))
         self.target_temperature_label.setText(_translate("display_panel", "Уставка, °С"))
         self.point_position_label.setText(_translate("display_panel", "Положение дес. точки"))
-        self.raising_time_label.setText(_translate("display_panel", "Время роста, с"))
-        self.holding_time_label.setText(_translate("display_panel", "Время выдержки, с"))
+        self.raising_time_label.setText(_translate("display_panel", "Время роста, мин"))
+        self.holding_time_label.setText(_translate("display_panel", "Время выдержки, мин"))
         self.current_temperature_label.setText(_translate("display_panel", "Текущая температура, °C"))
         self.device_state_label.setText(_translate("display_panel", "Состояние прибора"))
+        self.device_state_field.setText(_translate("display_panel", "IDLE"))
 
 
 if __name__ == "__main__":
