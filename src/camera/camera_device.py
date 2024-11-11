@@ -14,6 +14,8 @@ class CameraDevice(QObject):
     opened = pyqtSignal()
     image_ready = pyqtSignal(np.ndarray)
 
+    connection_lost = pyqtSignal()
+
     def __init__(self, parent=None):
         super().__init__(parent)
 
@@ -56,5 +58,6 @@ class CameraDevice(QObject):
             self.capture.open()
             self.opened.emit()
         except cv2.error as error:
+            self.connection_lost.emit()
             logger.error(f'unable to connect camera: {error}')
 

@@ -25,4 +25,16 @@ class DisplayPanel(QWidget, Ui_display_panel):
         self.current_temperature_lcd.display(
             device_values.current_temperature * 10 ** device_values.current_point_position
         )
-        self.device_state_lcd.display(device_values.current_operating_mode)
+        # TODO: rewrite match case
+        dd = {
+            0: 'Cтоп',
+            1: 'Работа',
+            2: 'Критическая авария',
+            3: 'Прогр. технолога завершена',
+            4: 'Автонастройка ПИД',
+            5: 'Ожид. запуска автонастройки',
+            6: 'Автонастройка завершена',
+            7: 'Настройка',
+        }
+
+        self.device_state_field.setText(dd[device_values.current_operating_mode])

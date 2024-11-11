@@ -124,14 +124,14 @@
      <item row="2" column="0">
       <widget class="QLabel" name="new_raising_time_label">
        <property name="text">
-        <string>Время роста, с</string>
+        <string>Время роста, мин</string>
        </property>
       </widget>
      </item>
      <item row="3" column="0">
       <widget class="QLabel" name="new_holding_time_label">
        <property name="text">
-        <string>Время выдержки, с</string>
+        <string>Время выдержки, мин</string>
        </property>
       </widget>
      </item>
