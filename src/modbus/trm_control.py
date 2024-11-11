@@ -17,6 +17,7 @@ class TRM(QObject):
     temperature_program_updated = pyqtSignal()
 
     modbus_connection_lost = pyqtSignal()
+    read_registers_error = pyqtSignal()
 
     device_values_ready = pyqtSignal(DeviceValues)
 
@@ -163,6 +164,7 @@ class TRM(QObject):
             registers = response.registers
         except AttributeError:
             logger.error('unable to read response registers')
+            self.read_registers_error.emit()
             raise ReadRegistersError
         return registers
 
