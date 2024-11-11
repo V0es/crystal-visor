@@ -139,12 +139,13 @@ class TRM(QObject):
         current_operating_mode = self.get_current_operation_mode()
         current_temperature = self.get_current_temperature()
         current_program = self.get_current_temperature_program()
+        current_point_position = self.get_current_point_position()
 
         device_values = DeviceValues(
             current_operating_mode,
             current_program,
             int(current_temperature),
-            current_program.point_position
+            current_point_position
         )
         self.current_values_buffer = device_values  # update buffer
 
@@ -169,7 +170,7 @@ class TRM(QObject):
         try:
             registers = response.registers
         except AttributeError:
-            logger.error('unable to read response registers')
+            logger.error(f'unable to read response registers, response: {response}')
             self.read_registers_error.emit()
             raise ReadRegistersError
         return registers
@@ -177,3 +178,12 @@ class TRM(QObject):
     def set_running_state(self, running_state: bool):
         logger.info('setting running state')
         self.modbus_client.write_coil(80, running_state, self.device_params.slave_id)
+
+    def get_current_point_position(self):
+        logger.info('getting current temperature point position')
+        try:
+            point_position = self._read_registers(0, 1, self.device_params.slave_id)[0]
+        except ReadRegistersError:
+            logger.error('getting device state form buffer')
+            point_position = self.current_values_buffer.current_point_position
+        return point_position
