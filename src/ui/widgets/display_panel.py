@@ -22,8 +22,6 @@ class DisplayPanel(QWidget, Ui_display_panel):
     @pyqtSlot(DeviceValues)
     def update_device_values(self, device_values: DeviceValues):
         self._update_temperature_program(device_values.current_program)
-        print(device_values.current_temperature)
-        print(device_values.current_point_position)
         self.current_temperature_lcd.display(
             device_values.current_temperature / 10 ** device_values.current_point_position
         )
