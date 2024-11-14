@@ -7,6 +7,7 @@ from PyQt6.QtCore import QObject, pyqtSignal, pyqtSlot
 from pymodbus.client import ModbusSerialClient
 from pymodbus.exceptions import ConnectionException
 
+from src.modbus.register_map import RegisterMap
 from src.modbus.register_reader import RegisterReaderThread
 from src.modbus.utils.dataframes.device_values import DeviceValues
 from src.modbus.utils.dataframes import TemperatureProgram
@@ -31,6 +32,7 @@ class TRM(QObject):
 
         self.modbus_client: ModbusSerialClient | None = None
         self.device_params: ModbusParams | None = None
+        self.registers = RegisterMap()
 
         self.current_values_buffer: DeviceValues = DeviceValues()
         self.current_temperature_program_buffer: TemperatureProgram = TemperatureProgram()
@@ -46,7 +48,12 @@ class TRM(QObject):
             stopbits=modbus_params.stopbits
         )
         self.device_params = modbus_params
-        self.register_read_thread = RegisterReaderThread(self.modbus_client, self.device_params.slave_id)
+        self.register_read_thread = RegisterReaderThread(
+            self.registers,
+            self.modbus_client,
+            self.device_params.slave_id
+        )
+
         self.connect_signals()
 
     def connect_signals(self):
@@ -78,7 +85,7 @@ class TRM(QObject):
 
         # TODO: come up with an idea of storing registers
         self.modbus_client.write_registers(
-            257,
+            self.registers.temperature_program.address,
             [
                 temperature.target_temperature,
                 temperature.point_position,
@@ -92,4 +99,4 @@ class TRM(QObject):
 
     def set_running_state(self, running_state: bool):
         logger.info('setting running state')
-        self.modbus_client.write_coil(80, running_state, self.device_params.slave_id)
+        self.modbus_client.write_coil(self.registers.running_state.address, running_state, self.device_params.slave_id)
