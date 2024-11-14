@@ -10,7 +10,7 @@ from .control_panel import ControlPanel
 
 from src.utils.timer import TimerControl
 
-DEBUG = False
+DEBUG = True
 
 if DEBUG:
     from test.mock.trm_mock import TrmMock as TRM
@@ -40,7 +40,6 @@ class ProjectWidget(QWidget):
         self.analysis_threadpool = QThreadPool()
 
         self.camera_timer = TimerControl(10000, self)
-        self.trm_timer = TimerControl(1000, self)
         self.label_timer = TimerControl(1000, self)
 
         self.setup_ui()
@@ -78,26 +77,26 @@ class ProjectWidget(QWidget):
         logger.error('READ REGISTERS ERROR DIALOG')
 
     def modbus_connection_lost(self):
-        # message = QMessageBox.critical(
-        #     self,
-        #     'Потеряна связь с ТРМ',
-        #     'Не получилось подключиться к ТРМ',
-        #     QMessageBox.StandardButton.Ok
-        # )
-        # if message == QMessageBox.StandardButton.Ok:
-        #     return
-        logger.error('MODBUS CONNECTION LOST DIALOG')
+        message = QMessageBox.critical(
+            self,
+            'Потеряна связь с ТРМ',
+            'Не получилось подключиться к ТРМ',
+            QMessageBox.StandardButton.Ok
+        )
+        if message == QMessageBox.StandardButton.Ok:
+            return
+        # logger.error('MODBUS CONNECTION LOST DIALOG')
 
     def camera_connection_lost(self):
-        # message = QMessageBox(
-        #     self,
-        #     'Потеряна связь с камерой',
-        #     'Не получилось подключиться к камере',
-        #     QMessageBox.StandardButton.Ok
-        # )
-        # if message == QMessageBox.StandardButton.Ok:
-        #     return
-        logger.error('CAMERA CONNECTION LOST DIALOG')
+        message = QMessageBox(
+            self,
+            'Потеряна связь с камерой',
+            'Не получилось подключиться к камере',
+            QMessageBox.StandardButton.Ok
+        )
+        if message == QMessageBox.StandardButton.Ok:
+            return
+        # logger.error('CAMERA CONNECTION LOST DIALOG')
 
     def connect_signals(self):
         self.settings_panel.modbus_connect.connect(self.trm.connect_device)
@@ -109,10 +108,10 @@ class ProjectWidget(QWidget):
         self.camera.connection_lost.connect(self.camera_connection_lost)
 
         self.trm.device_connected.connect(self.settings_panel.update_modbus_connection_state)
-        self.trm.device_connected.connect(self.trm_timer.start_timer)
+        # self.trm.device_connected.connect(self.trm.register_read_thread.start)
         self.trm.device_values_ready.connect(self.display_panel.update_device_values)
 
-        self.trm_timer.timer_updated.connect(self.trm.get_current_values)
+        # self.trm_timer.timer_updated.connect(self.trm.get_current_values)
 
         self.camera.opened.connect(self.settings_panel.update_camera_connection_state)
         # START ANALYSIS
