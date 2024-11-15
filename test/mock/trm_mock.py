@@ -79,7 +79,7 @@ class TrmMock(TRM):
         else:
             self.registers[17] = 0
 
-    def _read_registers(self, address: int, count: int, slave_id: int) -> List[int] | None:
+    def _read_registers(self, address: int, count: int) -> List[int] | None:
         regs = [self.registers[address + i] for i in range(count)]
 
         return regs if random.random() > 0.05 else self.read_registers_error.emit()
