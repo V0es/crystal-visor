@@ -9,21 +9,24 @@ from PyQt6.QtCore import QObject, pyqtSlot, pyqtSignal, QThread, QRunnable
 
 logger = logging.getLogger(__name__)
 
-
 @dataclass
 class AnalysisSettings:
     red_start: int = 105
     red_end: int = 255
     red_speed: int = 10
-    blue_start: int = 30
-    blue_end: int = 100
-    blue_speed: int = 5
+
     green_start: int = 30
     green_end: int = 100
     green_speed: int = 5
+
+    blue_start: int = 30
+    blue_end: int = 100
+    blue_speed: int = 5
+
     cut_off: int = 0
     scaling: int = 90
     base_height: float = 25
+    height_gap: float = 5
 
 
 class WorkerSignals(QObject):
@@ -34,9 +37,10 @@ class ImageAnalysisWorker(QRunnable):
 
     def __init__(self, image: np.ndarray, settings: AnalysisSettings = AnalysisSettings()):
         super().__init__()
-        self.image = None
+        self.image = image
         self.signals = WorkerSignals()
         self.settings = settings
+
 
     def set_settings(self, new_settings: AnalysisSettings):
         self.settings = new_settings
@@ -49,7 +53,10 @@ class ImageAnalysisWorker(QRunnable):
         result_dict = self.save_to_csv(primitive_dict, returned=True)
         current_height = list(result_dict.keys())[0] * 10
         logger.info(f'current height ready: {current_height}')
-        self.signals.delta_height_ready.emit(current_height - self.settings.base_height)
+        delta_height = current_height - self.settings.base_height
+        if -self.settings.height_gap <= delta_height <= self.settings.height_gap:
+            return
+        self.signals.delta_height_ready.emit(delta_height)
 
     @staticmethod
     def save_to_csv(result_dict, returned=False) -> Dict:
