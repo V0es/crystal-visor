@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>ConfigDialog</class>
- <widget class="QDialog" name="ConfigDialog">
+ <class>config_dialog</class>
+ <widget class="QDialog" name="config_dialog">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -26,7 +26,11 @@
         </widget>
        </item>
        <item row="0" column="1">
-        <widget class="QSpinBox" name="low_red_spinbox"/>
+        <widget class="QSpinBox" name="low_red_spinbox">
+         <property name="maximum">
+          <number>255</number>
+         </property>
+        </widget>
        </item>
        <item row="1" column="0">
         <widget class="QLabel" name="up_red_label">
@@ -36,7 +40,11 @@
         </widget>
        </item>
        <item row="1" column="1">
-        <widget class="QSpinBox" name="up_red_spinbox"/>
+        <widget class="QSpinBox" name="up_red_spinbox">
+         <property name="maximum">
+          <number>255</number>
+         </property>
+        </widget>
        </item>
        <item row="2" column="0">
         <widget class="QLabel" name="step_red_label">
@@ -46,7 +54,11 @@
         </widget>
        </item>
        <item row="2" column="1">
-        <widget class="QSpinBox" name="step_red_spinbox"/>
+        <widget class="QSpinBox" name="step_red_spinbox">
+         <property name="maximum">
+          <number>255</number>
+         </property>
+        </widget>
        </item>
        <item row="3" column="0">
         <widget class="QLabel" name="low_blue_label">
@@ -56,7 +68,11 @@
         </widget>
        </item>
        <item row="3" column="1">
-        <widget class="QSpinBox" name="low_blue_spinbox"/>
+        <widget class="QSpinBox" name="low_blue_spinbox">
+         <property name="maximum">
+          <number>255</number>
+         </property>
+        </widget>
        </item>
        <item row="4" column="0">
         <widget class="QLabel" name="up_blue_label">
@@ -66,7 +82,11 @@
         </widget>
        </item>
        <item row="4" column="1">
-        <widget class="QSpinBox" name="up_blue_spinbox"/>
+        <widget class="QSpinBox" name="up_blue_spinbox">
+         <property name="maximum">
+          <number>255</number>
+         </property>
+        </widget>
        </item>
        <item row="5" column="0">
         <widget class="QLabel" name="step_blue_label">
@@ -76,7 +96,11 @@
         </widget>
        </item>
        <item row="5" column="1">
-        <widget class="QSpinBox" name="step_blue_spinbox"/>
+        <widget class="QSpinBox" name="step_blue_spinbox">
+         <property name="maximum">
+          <number>255</number>
+         </property>
+        </widget>
        </item>
        <item row="6" column="0">
         <widget class="QLabel" name="low_green_label">
@@ -86,7 +110,11 @@
         </widget>
        </item>
        <item row="6" column="1">
-        <widget class="QSpinBox" name="low_green_spinbox"/>
+        <widget class="QSpinBox" name="low_green_spinbox">
+         <property name="maximum">
+          <number>255</number>
+         </property>
+        </widget>
        </item>
        <item row="7" column="0">
         <widget class="QLabel" name="up_green_label">
@@ -96,7 +124,11 @@
         </widget>
        </item>
        <item row="7" column="1">
-        <widget class="QSpinBox" name="up_green_spinbox"/>
+        <widget class="QSpinBox" name="up_green_spinbox">
+         <property name="maximum">
+          <number>255</number>
+         </property>
+        </widget>
        </item>
        <item row="8" column="0">
         <widget class="QLabel" name="step_green_label">
@@ -106,14 +138,22 @@
         </widget>
        </item>
        <item row="8" column="1">
-        <widget class="QSpinBox" name="step_green_spinbox"/>
+        <widget class="QSpinBox" name="step_green_spinbox">
+         <property name="maximum">
+          <number>255</number>
+         </property>
+        </widget>
        </item>
       </layout>
      </item>
      <item>
       <layout class="QFormLayout" name="formLayout_2">
        <item row="0" column="1">
-        <widget class="QSpinBox" name="cutoff_spinbox"/>
+        <widget class="QSpinBox" name="cutoff_spinbox">
+         <property name="maximum">
+          <number>540</number>
+         </property>
+        </widget>
        </item>
        <item row="1" column="0">
         <widget class="QLabel" name="scaling_coeff_label">
@@ -123,7 +163,11 @@
         </widget>
        </item>
        <item row="1" column="1">
-        <widget class="QSpinBox" name="scaling_coeff_spinbox"/>
+        <widget class="QSpinBox" name="scaling_coeff_spinbox">
+         <property name="maximum">
+          <number>1080</number>
+         </property>
+        </widget>
        </item>
        <item row="2" column="0">
         <widget class="QLabel" name="trm_polling_label">
@@ -133,7 +177,11 @@
         </widget>
        </item>
        <item row="2" column="1">
-        <widget class="QSpinBox" name="trm_polling_spinbox"/>
+        <widget class="QSpinBox" name="trm_polling_spinbox">
+         <property name="maximum">
+          <number>1800</number>
+         </property>
+        </widget>
        </item>
        <item row="3" column="0">
         <widget class="QLabel" name="camera_polling_label">
@@ -143,7 +191,11 @@
         </widget>
        </item>
        <item row="3" column="1">
-        <widget class="QSpinBox" name="camera_polling_spinbox"/>
+        <widget class="QSpinBox" name="camera_polling_spinbox">
+         <property name="maximum">
+          <number>1800</number>
+         </property>
+        </widget>
        </item>
        <item row="0" column="0">
         <widget class="QLabel" name="cutoff_label">
@@ -160,7 +212,11 @@
         </widget>
        </item>
        <item row="4" column="1">
-        <widget class="QDoubleSpinBox" name="base_height_dspinbox"/>
+        <widget class="QDoubleSpinBox" name="base_height_dspinbox">
+         <property name="maximum">
+          <double>100.000000000000000</double>
+         </property>
+        </widget>
        </item>
        <item row="5" column="0">
         <widget class="QLabel" name="height_gap_label">
@@ -170,7 +226,11 @@
         </widget>
        </item>
        <item row="5" column="1">
-        <widget class="QDoubleSpinBox" name="height_gap_dspinbox"/>
+        <widget class="QDoubleSpinBox" name="height_gap_dspinbox">
+         <property name="maximum">
+          <double>100.000000000000000</double>
+         </property>
+        </widget>
        </item>
       </layout>
      </item>
@@ -184,6 +244,9 @@
      <property name="standardButtons">
       <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
      </property>
+     <property name="centerButtons">
+      <bool>true</bool>
+     </property>
     </widget>
    </item>
   </layout>
@@ -193,7 +256,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>accepted()</signal>
-   <receiver>ConfigDialog</receiver>
+   <receiver>config_dialog</receiver>
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -209,7 +272,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>rejected()</signal>
-   <receiver>ConfigDialog</receiver>
+   <receiver>config_dialog</receiver>
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">

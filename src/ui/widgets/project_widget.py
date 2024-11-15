@@ -1,16 +1,19 @@
 import logging
 
 import numpy as np
-from PyQt6.QtCore import pyqtSlot, QThreadPool
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QMessageBox
+from PyQt6.QtCore import pyqtSlot, QThreadPool, pyqtSignal
+from PyQt6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QMessageBox, QDialog
 
 from .display_panel import DisplayPanel
 from .settings_panel import SettingsPanel
 from .control_panel import ControlPanel
 
 from src.utils.timer import TimerControl
+from ..dialogs.config_dialog import ConfigDialog
+from src.core.image_analysis import AnalysisSettings
+from src.modbus.utils.dataframes.modbus_params import PollingSettings
 
-DEBUG = True
+DEBUG = False
 
 if DEBUG:
     from test.mock.trm_mock import TrmMock as TRM
@@ -25,6 +28,8 @@ logger = logging.getLogger(__name__)
 
 
 class ProjectWidget(QWidget):
+    analysis_settings_changed = pyqtSignal(AnalysisSettings)
+    polling_settings_changed = pyqtSignal(PollingSettings)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -38,6 +43,9 @@ class ProjectWidget(QWidget):
         self.trm = TRM(self)
         self.camera = CameraDevice()
         self.analysis_threadpool = QThreadPool()
+
+        self.analysis_settings = AnalysisSettings()
+        self.polling_settings = PollingSettings()
 
         self.camera_timer = TimerControl(10000, self)
         self.label_timer = TimerControl(1000, self)
@@ -59,23 +67,37 @@ class ProjectWidget(QWidget):
 
     @pyqtSlot(np.ndarray)
     def send_image_to_analysis(self, image: np.ndarray):
-        worker = ImageAnalysisWorker(image)
+        worker = ImageAnalysisWorker(image, self.analysis_settings)
         worker.signals.delta_height_ready.connect(self.control_panel.auto_update_temperature_program)
         self.analysis_threadpool.start(worker)
 
+    @pyqtSlot()
     def read_registers_error(self):
-        # TODO: decide if registers error is needed
-        # message = QMessageBox.warning(
-        #     self,
-        #     'Ошибка при чтении регистров',
-        #     'Не получилось прочитать регистры, взято значение из буффера',
-        #     QMessageBox.StandardButton.Ok
-        # )
-        #
-        # if message == QMessageBox.StandardButton.Ok:
-        #     return
         logger.error('READ REGISTERS ERROR DIALOG')
 
+    @pyqtSlot()
+    def show_config_dialog(self):
+        dialog = ConfigDialog(self.analysis_settings, self.polling_settings)
+        dialog.show()
+        if dialog.exec() == QDialog.DialogCode.Accepted:
+            new_analysis_settings, new_polling_settings = dialog.get_data()
+        else:
+            return
+        if not self.analysis_settings == new_analysis_settings:
+            print('changed analysis setttings')
+            self.analysis_settings_changed.emit(new_analysis_settings)
+            self.analysis_settings = new_analysis_settings
+
+        if not self.polling_settings == new_polling_settings:
+            print('changed polling setttings')
+            self.polling_settings_changed.emit(new_polling_settings)
+            self.polling_settings = new_polling_settings
+
+    @pyqtSlot(PollingSettings)
+    def update_polling_settings(self, settings: PollingSettings):
+        self.camera_timer.set_interval(settings.camera_polling_rate)
+
+    @pyqtSlot()
     def modbus_connection_lost(self):
         message = QMessageBox.critical(
             self,
@@ -85,8 +107,8 @@ class ProjectWidget(QWidget):
         )
         if message == QMessageBox.StandardButton.Ok:
             return
-        # logger.error('MODBUS CONNECTION LOST DIALOG')
 
+    @pyqtSlot()
     def camera_connection_lost(self):
         message = QMessageBox(
             self,
@@ -96,7 +118,6 @@ class ProjectWidget(QWidget):
         )
         if message == QMessageBox.StandardButton.Ok:
             return
-        # logger.error('CAMERA CONNECTION LOST DIALOG')
 
     def connect_signals(self):
         self.settings_panel.modbus_connect.connect(self.trm.connect_device)
@@ -107,11 +128,9 @@ class ProjectWidget(QWidget):
         self.trm.read_registers_error.connect(self.read_registers_error)
         self.camera.connection_lost.connect(self.camera_connection_lost)
 
+        #
         self.trm.device_connected.connect(self.settings_panel.update_modbus_connection_state)
-        # self.trm.device_connected.connect(self.trm.register_read_thread.start)
         self.trm.device_values_ready.connect(self.display_panel.update_device_values)
-
-        # self.trm_timer.timer_updated.connect(self.trm.get_current_values)
 
         self.camera.opened.connect(self.settings_panel.update_camera_connection_state)
         # START ANALYSIS
@@ -135,3 +154,10 @@ class ProjectWidget(QWidget):
 
         self.label_timer.timer_updated.connect(self.control_panel.update_timer_label)
         self.camera_timer.timer_updated.connect(self.camera.capture_image)
+
+        self.display_panel.config_dialog_btn.clicked.connect(self.show_config_dialog)
+
+        # SETTINGS CHANGE
+        self.polling_settings_changed.connect(self.update_polling_settings)
+        self.polling_settings_changed.connect(self.trm.update_polling_settings)
+
