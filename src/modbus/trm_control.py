@@ -13,7 +13,7 @@ from src.modbus.utils.dataframes.device_values import DeviceValues
 from src.modbus.utils.dataframes import TemperatureProgram
 from src.modbus.utils.dataframes import ModbusParams
 from src.modbus.exceptions import ReadRegistersError
-
+from src.modbus.utils.dataframes.modbus_params import PollingSettings
 
 logger = logging.getLogger(__name__)
 
@@ -33,6 +33,7 @@ class TRM(QObject):
         self.modbus_client: ModbusSerialClient | None = None
         self.device_params: ModbusParams | None = None
         self.registers = RegisterMap()
+        self.polling_settings = PollingSettings()
 
         self.current_values_buffer: DeviceValues = DeviceValues()
         self.current_temperature_program_buffer: TemperatureProgram = TemperatureProgram()
@@ -51,7 +52,8 @@ class TRM(QObject):
         self.register_read_thread = RegisterReaderThread(
             self.registers,
             self.modbus_client,
-            self.device_params.slave_id
+            self.device_params.slave_id,
+            self.polling_settings
         )
 
         self.connect_signals()
@@ -96,6 +98,12 @@ class TRM(QObject):
         )
         self.set_running_state(True)
         self.temperature_program_updated.emit()
+
+    @pyqtSlot(PollingSettings)
+    def update_polling_settings(self, new_settings):
+        self.polling_settings = new_settings
+        if self.register_read_thread:
+            self.register_read_thread.update_polling_settings(self.polling_settings)
 
     def set_running_state(self, running_state: bool):
         logger.info('setting running state')
