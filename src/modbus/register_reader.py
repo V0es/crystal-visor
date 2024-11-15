@@ -8,6 +8,7 @@ from pymodbus.client import ModbusSerialClient
 from src.modbus.exceptions import ReadRegistersError
 from src.modbus.register_map import RegisterMap, Register
 from src.modbus.utils.dataframes import DeviceValues, TemperatureProgram
+from src.modbus.utils.dataframes.modbus_params import PollingSettings
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +23,7 @@ class RegisterReaderThread(QThread):
                  registers: RegisterMap,
                  modbus_client: ModbusSerialClient,
                  slave_id: int,
-                 polling_rate_msec: int = 1000):
+                 polling_settings: PollingSettings = PollingSettings()):
 
         super().__init__()
         self.is_running = False
@@ -31,7 +32,11 @@ class RegisterReaderThread(QThread):
         self.registers = registers
         self.modbus = modbus_client
         self.slave_id = slave_id
-        self.polling_rate_sec = polling_rate_msec / 1000
+        self.polling_rate_sec = polling_settings.modbus_polling_rate / 1000
+
+    @pyqtSlot(PollingSettings)
+    def update_polling_settings(self, new_settings: PollingSettings):
+        self.polling_rate_sec = new_settings.modbus_polling_rate / 1000
 
     def run(self):
         self.is_running = True
@@ -42,15 +47,15 @@ class RegisterReaderThread(QThread):
 
             current_operating_mode = self.get_current_operation_mode()
             print(f'operation mode: address 17 = {current_operating_mode}')
-            time.sleep(0.2)
+            time.sleep(0.15)
 
             current_temperature = self.get_current_temperature()
             print(f'current_temperature: address 2 = {current_temperature}')
-            time.sleep(0.2)
+            time.sleep(0.15)
 
             current_program = self.get_current_temperature_program()
             print(f'current program: address 256 = {current_program}')
-            time.sleep(0.2)
+            time.sleep(0.15)
 
             current_point_position = self.get_current_point_position()
             print(f'current point position: address 0 = {current_point_position}\n')
@@ -61,7 +66,7 @@ class RegisterReaderThread(QThread):
                 int(current_temperature),
                 current_point_position
             )
-
+            self._current_values_buffer = device_values
             self.result.emit(device_values)
 
     @pyqtSlot()
