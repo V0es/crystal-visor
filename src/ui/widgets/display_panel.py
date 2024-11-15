@@ -37,4 +37,4 @@ class DisplayPanel(QWidget, Ui_display_panel):
             7: 'Настройка',
         }
 
-        self.device_state_field.setText(dd[device_values.current_operating_mode])
+        self.device_state_field.setText(dd.get(device_values.current_operating_mode, 'Стоп'))
