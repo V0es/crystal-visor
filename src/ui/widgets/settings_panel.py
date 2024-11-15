@@ -1,11 +1,12 @@
 import logging
+from typing import List
 
-from PyQt6.QtCore import pyqtSlot, QRegularExpression, pyqtSignal
+from PyQt6.QtCore import pyqtSlot, QRegularExpression, pyqtSignal, QThreadPool
 from PyQt6.QtGui import QRegularExpressionValidator, QIntValidator
 from PyQt6.QtWidgets import QWidget
 
 from .resource.settings_panel import Ui_settings_panel
-from src.utils.serial import available_serial_ports
+from src.utils.serial import SerialPortWorker
 from src.modbus.utils.dataframes import ModbusParams
 from src.camera.camera_connection_settings import CameraConnection
 
@@ -19,6 +20,8 @@ class SettingsPanel(QWidget, Ui_settings_panel):
     def __init__(self, parent=None):
 
         super(SettingsPanel, self).__init__(parent)
+
+        self.threadpool = QThreadPool()
 
         self.setupUi(self)
         self.init_ui()
@@ -41,7 +44,8 @@ class SettingsPanel(QWidget, Ui_settings_panel):
 
         self.stopbits_spinbox.setValue(1)
         self.bytesize_spinbox.setValue(8)
-        self.serial_port_combo.addItems(available_serial_ports())
+        self.slave_id_spinbox.setValue(16)
+        self.get_available_serial_ports()
 
         self.camera_ip_field.setValidator(
             QRegularExpressionValidator(
@@ -60,21 +64,25 @@ class SettingsPanel(QWidget, Ui_settings_panel):
         )
 
     def connect_signals(self):
-        self.refresh_serial_ports_btn.clicked.connect(self.update_available_serial_ports)
+        self.refresh_serial_ports_btn.clicked.connect(self.get_available_serial_ports)
         self.modbus_connect_btn.clicked.connect(self.connect_to_modbus_device)
         self.connect_camera_btn.clicked.connect(self.connect_to_camera_device)
 
     @pyqtSlot()
-    def update_available_serial_ports(self):
-        available_ports = available_serial_ports()
-        logger.info(f'got available serial ports: {available_ports}')
+    def get_available_serial_ports(self):
+        serial_worker = SerialPortWorker()
+        serial_worker.signals.available_ports_ready.connect(self.update_available_serial_ports)
+        self.threadpool.start(serial_worker)
 
+    @pyqtSlot(list)
+    def update_available_serial_ports(self, serial_ports: List[str]):
+
+        logger.info(f'got available serial ports: {serial_ports}')
         # TODO: optimize loop
         for i in range(self.serial_port_combo.count()):
             self.serial_port_combo.removeItem(i)
 
-        self.serial_port_combo.addItems(available_ports)
-
+        self.serial_port_combo.addItems(serial_ports)
         logger.info('updated com ports')
 
     @pyqtSlot()
