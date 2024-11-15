@@ -29,6 +29,9 @@ class Ui_display_panel(object):
         self.title_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         self.title_label.setObjectName("title_label")
         self.verticalLayout.addWidget(self.title_label)
+        self.config_dialog_btn = QtWidgets.QPushButton(parent=display_panel)
+        self.config_dialog_btn.setObjectName("config_dialog_btn")
+        self.verticalLayout.addWidget(self.config_dialog_btn)
         self.display_layout = QtWidgets.QFormLayout()
         self.display_layout.setContentsMargins(-1, 101, -1, 0)
         self.display_layout.setObjectName("display_layout")
@@ -146,6 +149,7 @@ class Ui_display_panel(object):
         _translate = QtCore.QCoreApplication.translate
         display_panel.setWindowTitle(_translate("display_panel", "Form"))
         self.title_label.setText(_translate("display_panel", "Текущие значения"))
+        self.config_dialog_btn.setText(_translate("display_panel", "Настройки"))
         self.target_temperature_label.setText(_translate("display_panel", "Уставка, °С"))
         self.point_position_label.setText(_translate("display_panel", "Положение дес. точки"))
         self.raising_time_label.setText(_translate("display_panel", "Время роста, мин"))
