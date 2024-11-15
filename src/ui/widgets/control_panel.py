@@ -6,6 +6,9 @@ from src.modbus.utils.dataframes import TemperatureProgram
 
 
 import logging
+
+from src.utils.timer import Time
+
 logger = logging.getLogger(__name__)
 
 
@@ -28,9 +31,9 @@ class ControlPanel(QWidget, Ui_control_panel):
         self.auto_temp_adjustment_checkbox.stateChanged.connect(self.update_temperature_adjustment_availability)
         self.set_new_values_btn.clicked.connect(self.manual_update_temperature_program)
 
-    @pyqtSlot(QTime)
-    def update_timer_label(self, time: QTime):
-        self.time_label.setText(time.toString('hh:mm:ss'))
+    @pyqtSlot(Time)
+    def update_timer_label(self, time: Time):
+        self.time_label.setText(str(time))
 
     @pyqtSlot()
     def update_temperature_adjustment_availability(self):
