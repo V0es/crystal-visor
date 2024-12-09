@@ -9,6 +9,7 @@ from PyQt6.QtCore import QObject, pyqtSlot, pyqtSignal, QThread, QRunnable
 
 logger = logging.getLogger(__name__)
 
+
 @dataclass
 class AnalysisSettings:
     red_start: int = 105
@@ -24,7 +25,7 @@ class AnalysisSettings:
     blue_speed: int = 5
 
     cut_off: int = 0
-    scaling: int = 90
+    scaling: int = 23.167
     base_height: float = 25
     height_gap: float = 5
 
@@ -40,7 +41,6 @@ class ImageAnalysisWorker(QRunnable):
         self.image = image
         self.signals = WorkerSignals()
         self.settings = settings
-
 
     def set_settings(self, new_settings: AnalysisSettings):
         self.settings = new_settings
@@ -92,7 +92,7 @@ class ImageAnalysisWorker(QRunnable):
                     length = max([k[0][1] for k in res]) - min([k[0][1] for k in res])
                     graph.append(length)
 
-        graph = [round(int(x) / self.settings.scaling, 1)
+        graph = [round(int(x) / self.settings.scaling, 4)
                  for x in graph if self.settings.cut_off < x < height - self.settings.cut_off]
         result_dict = Counter(graph)
 

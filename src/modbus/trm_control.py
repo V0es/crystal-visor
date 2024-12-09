@@ -6,7 +6,7 @@ from PyQt6.QtCore import QObject, pyqtSignal, pyqtSlot
 
 from pymodbus.client import ModbusSerialClient
 from pymodbus.exceptions import ConnectionException
-
+from minimalmodbus import Instrument
 from src.modbus.register_map import RegisterMap
 from src.modbus.register_reader import RegisterReaderThread
 from src.modbus.utils.dataframes.device_values import DeviceValues
@@ -30,7 +30,7 @@ class TRM(QObject):
     def __init__(self, parent=None):
         super().__init__(parent)
 
-        self.modbus_client: ModbusSerialClient | None = None
+        self.modbus_client: Instrument | None = None
         self.device_params: ModbusParams | None = None
         self.registers = RegisterMap()
         self.polling_settings = PollingSettings()
@@ -41,12 +41,9 @@ class TRM(QObject):
         self.register_read_thread: RegisterReaderThread | None = None
 
     def _init_device(self, modbus_params: ModbusParams):
-        self.modbus_client = ModbusSerialClient(
+        self.modbus_client = Instrument(
             port=modbus_params.serial_port,
-            baudrate=modbus_params.baudrate,
-            bytesize=modbus_params.bytesize,
-            parity=modbus_params.pairity,
-            stopbits=modbus_params.stopbits
+            slaveaddress=modbus_params.slave_id,
         )
         self.device_params = modbus_params
         self.register_read_thread = RegisterReaderThread(
@@ -66,7 +63,7 @@ class TRM(QObject):
     def connect_device(self, modbus_params: ModbusParams):
         self._init_device(modbus_params)
         logger.info('connecting to modbus')
-        state = self.modbus_client.connect()
+        state = True
         logger.info(f'connection status {state}')
         self.device_connected.emit(state)
 
@@ -80,22 +77,27 @@ class TRM(QObject):
     @pyqtSlot(TemperatureProgram)
     def set_new_temperature_program(self, temperature: TemperatureProgram):
         logger.info('setting new temperature program')
-        if not self.modbus_client or not self.modbus_client.connected:
+        if not self.modbus_client:
             self.modbus_connection_lost.emit()
             logger.warning('no modbus client or modbus client is not connected')
             return
 
         # TODO: come up with an idea of storing registers
-        self.modbus_client.write_registers(
-            self.registers.temperature_program.address,
-            [
-                temperature.target_temperature,
-                temperature.point_position,
-                temperature.raising_time,
-                temperature.holding_time
-            ],
-            self.device_params.slave_id
-        )
+
+        try:
+            self.modbus_client.write_registers(
+                self.registers.temperature_program.address,
+                [
+                    temperature.target_temperature,
+                    temperature.point_position,
+                    temperature.raising_time,
+                    temperature.holding_time
+                ]
+            )
+        except IOError:
+            print('no response')
+        self.set_running_state(False)
+        time.sleep(0.05)
         self.set_running_state(True)
         self.temperature_program_updated.emit()
 
@@ -107,4 +109,8 @@ class TRM(QObject):
 
     def set_running_state(self, running_state: bool):
         logger.info('setting running state')
-        self.modbus_client.write_coil(self.registers.running_state.address, running_state, self.device_params.slave_id)
+        state = 1 if running_state else 0
+        try:
+            self.modbus_client.write_register(self.registers.running_state.address, state, functioncode=16)
+        except IOError:
+            print('some error')

@@ -19,7 +19,7 @@ class CameraDevice(QObject):
     def __init__(self, parent=None):
         super().__init__(parent)
 
-        self.connection_settings = None
+        self.connection_params: CameraConnection | None = None
         self.capture = None
         self.last_image = None
 
@@ -42,6 +42,7 @@ class CameraDevice(QObject):
 
     def _init_camera(self, connection_params: CameraConnection):
         logger.info('initializing capture')
+        self.connection_params = connection_params
         self.capture = cv2.VideoCapture(
             f'rtsp://{connection_params.username}:'
             f'{connection_params.password}@'
@@ -55,7 +56,13 @@ class CameraDevice(QObject):
         self._init_camera(connection_params)
         try:
             logger.info('trying to connect camera')
-            self.capture.open()
+            self.capture.open(
+                f'rtsp://{connection_params.username}:'
+                f'{connection_params.password}@'
+                f'{connection_params.ip_address}:'
+                f'{connection_params.port}/'
+                f'{connection_params.stream}'
+            )
             self.opened.emit()
         except cv2.error as error:
             self.connection_lost.emit()
