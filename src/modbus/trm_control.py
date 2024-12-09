@@ -111,6 +111,6 @@ class TRM(QObject):
         logger.info('setting running state')
         state = 1 if running_state else 0
         try:
-            self.modbus_client.write_register(self.registers.running_state.address, state, functioncode=16)
-        except IOError:
-            print('some error')
+            self.modbus_client.write_bit(self.registers.running_state.address, state, functioncode=5)
+        except IOError as e:
+            print('some error', e)
