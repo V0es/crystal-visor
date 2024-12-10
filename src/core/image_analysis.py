@@ -1,6 +1,7 @@
 import logging
 from collections import Counter
 from dataclasses import dataclass
+from types import NoneType
 from typing import Dict
 
 import cv2
@@ -25,7 +26,7 @@ class AnalysisSettings:
     blue_speed: int = 5
 
     cut_off: int = 0
-    scaling: int = 23.167
+    scaling: int = 74.5
     base_height: float = 25
     height_gap: float = 5
 
@@ -47,7 +48,7 @@ class ImageAnalysisWorker(QRunnable):
 
     @pyqtSlot()
     def run(self):
-        if not self.image:
+        if isinstance(self.image, NoneType):
             return
         primitive_dict = self.analyze_image(self.image)
         result_dict = self.save_to_csv(primitive_dict, returned=True)
