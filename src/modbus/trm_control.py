@@ -70,6 +70,17 @@ class TRM(QObject):
     @pyqtSlot(float)
     def adjust_temperature(self, delta_temp: float):
         program = self.register_read_thread.current_values().current_program
+
+        new_target_temperature = round(program.target_temperature + delta_temp, 1)
+        new_point_position = str(new_target_temperature)[::-1].find('.')
+        new_target_temperature = int(new_target_temperature * 10**new_point_position)
+        if new_target_temperature < 410 or new_target_temperature > 460:
+            new_target_temperature = program.target_temperature
+            new_point_position = program.point_position
+
+        program.target_temperature = new_target_temperature
+        program.point_position = new_point_position
+
         program.target_temperature += delta_temp
         logger.info(f'adjusting temperature for {delta_temp}')
         self.set_new_temperature_program(program)
@@ -97,7 +108,7 @@ class TRM(QObject):
         except IOError:
             print('no response')
         self.set_running_state(False)
-        time.sleep(0.05)
+        time.sleep(0.5)
         self.set_running_state(True)
         self.temperature_program_updated.emit()
 

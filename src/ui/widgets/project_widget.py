@@ -47,7 +47,7 @@ class ProjectWidget(QWidget):
         self.analysis_settings = AnalysisSettings()
         self.polling_settings = PollingSettings()
 
-        self.camera_timer = TimerControl(30000, self)
+        self.camera_timer = TimerControl(60 * 1000, self)
         self.label_timer = TimerControl(1000, self)
 
         self.setup_ui()

@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class AnalysisSettings:
-    red_start: int = 105
+    red_start: int = 0
     red_end: int = 255
     red_speed: int = 10
 
@@ -25,8 +25,8 @@ class AnalysisSettings:
     blue_end: int = 100
     blue_speed: int = 5
 
-    cut_off: int = 0
-    scaling: int = 74.5
+    cut_off: int = 30
+    scaling: int = 320
     base_height: float = 25
     height_gap: float = 5
 
@@ -73,6 +73,11 @@ class ImageAnalysisWorker(QRunnable):
     def analyze_image(self, image: np.ndarray) -> Counter:
         logger.info('analyzing image')
         width, height = image.shape[1], image.shape[0]
+        width_gap = 300
+        center = image.shape[1] // 2
+        height = image.shape[0]
+
+        image = image[self.settings.cut_off:height - self.settings.cut_off, center - width_gap:center + width_gap]
 
         upper_red = np.array([0, 0, 255])
         graph = []
