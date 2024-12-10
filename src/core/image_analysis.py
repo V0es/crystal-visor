@@ -25,7 +25,7 @@ class AnalysisSettings:
     blue_end: int = 100
     blue_speed: int = 5
 
-    cut_off: int = 30
+    cut_off: int = 50
     scaling: int = 320
     base_height: float = 25
     height_gap: float = 5
