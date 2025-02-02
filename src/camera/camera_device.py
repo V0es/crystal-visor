@@ -1,5 +1,6 @@
 from collections import Counter
 import logging
+from types import NoneType
 
 import cv2
 import numpy as np
@@ -19,7 +20,7 @@ class CameraDevice(QObject):
     def __init__(self, parent=None):
         super().__init__(parent)
 
-        self.connection_settings = None
+        self.connection_params: CameraConnection | None = None
         self.capture = None
         self.last_image = None
 
@@ -30,18 +31,37 @@ class CameraDevice(QObject):
 
     @pyqtSlot()
     def capture_image(self):
+        self.capture = cv2.VideoCapture(
+            f'rtsp://{self.connection_params.username}:'
+            f'{self.connection_params.password}@'
+            f'{self.connection_params.ip_address}:'
+            f'{self.connection_params.port}/'
+            f'{self.connection_params.stream}'
+        )
+        self.capture.set(cv2.CAP_PROP_BUFFERSIZE, 1)
         logger.info('capturing image')
         if not self.capture:
             logger.warning('no capture object')
             return
+        if not self.capture.isOpened():
+            logger.warning('capture closed')
+            self.capture.open(
+                f'rtsp://{self.connection_params.username}:'
+                f'{self.connection_params.password}@'
+                f'{self.connection_params.ip_address}:'
+                f'{self.connection_params.port}/'
+                f'{self.connection_params.stream}'
+            )
 
         ret, image = self.capture.read()
         self.last_image = image
         self.capture.release()
-        self.image_ready.emit(image)
+        if not isinstance(image, NoneType):
+            self.image_ready.emit(image)
 
     def _init_camera(self, connection_params: CameraConnection):
         logger.info('initializing capture')
+        self.connection_params = connection_params
         self.capture = cv2.VideoCapture(
             f'rtsp://{connection_params.username}:'
             f'{connection_params.password}@'
@@ -55,7 +75,13 @@ class CameraDevice(QObject):
         self._init_camera(connection_params)
         try:
             logger.info('trying to connect camera')
-            self.capture.open()
+            self.capture.open(
+                f'rtsp://{connection_params.username}:'
+                f'{connection_params.password}@'
+                f'{connection_params.ip_address}:'
+                f'{connection_params.port}/'
+                f'{connection_params.stream}'
+            )
             self.opened.emit()
         except cv2.error as error:
             self.connection_lost.emit()

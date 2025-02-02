@@ -1,6 +1,7 @@
 import logging
 from collections import Counter
 from dataclasses import dataclass
+from types import NoneType
 from typing import Dict
 
 import cv2
@@ -9,9 +10,10 @@ from PyQt6.QtCore import QObject, pyqtSlot, pyqtSignal, QThread, QRunnable
 
 logger = logging.getLogger(__name__)
 
+
 @dataclass
 class AnalysisSettings:
-    red_start: int = 105
+    red_start: int = 0
     red_end: int = 255
     red_speed: int = 10
 
@@ -23,8 +25,8 @@ class AnalysisSettings:
     blue_end: int = 100
     blue_speed: int = 5
 
-    cut_off: int = 0
-    scaling: int = 90
+    cut_off: int = 50
+    scaling: int = 320
     base_height: float = 25
     height_gap: float = 5
 
@@ -41,13 +43,12 @@ class ImageAnalysisWorker(QRunnable):
         self.signals = WorkerSignals()
         self.settings = settings
 
-
     def set_settings(self, new_settings: AnalysisSettings):
         self.settings = new_settings
 
     @pyqtSlot()
     def run(self):
-        if not self.image:
+        if isinstance(self.image, NoneType):
             return
         primitive_dict = self.analyze_image(self.image)
         result_dict = self.save_to_csv(primitive_dict, returned=True)
@@ -72,6 +73,11 @@ class ImageAnalysisWorker(QRunnable):
     def analyze_image(self, image: np.ndarray) -> Counter:
         logger.info('analyzing image')
         width, height = image.shape[1], image.shape[0]
+        width_gap = 300
+        center = image.shape[1] // 2
+        height = image.shape[0]
+
+        image = image[self.settings.cut_off:height - self.settings.cut_off, center - width_gap:center + width_gap]
 
         upper_red = np.array([0, 0, 255])
         graph = []
@@ -92,7 +98,7 @@ class ImageAnalysisWorker(QRunnable):
                     length = max([k[0][1] for k in res]) - min([k[0][1] for k in res])
                     graph.append(length)
 
-        graph = [round(int(x) / self.settings.scaling, 1)
+        graph = [round(int(x) / self.settings.scaling, 4)
                  for x in graph if self.settings.cut_off < x < height - self.settings.cut_off]
         result_dict = Counter(graph)
 

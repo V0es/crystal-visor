@@ -10,6 +10,8 @@ from src.modbus.register_map import RegisterMap, Register
 from src.modbus.utils.dataframes import DeviceValues, TemperatureProgram
 from src.modbus.utils.dataframes.modbus_params import PollingSettings
 
+from minimalmodbus import Instrument
+
 logger = logging.getLogger(__name__)
 
 
@@ -21,7 +23,7 @@ class RegisterReaderThread(QThread):
 
     def __init__(self,
                  registers: RegisterMap,
-                 modbus_client: ModbusSerialClient,
+                 modbus_client: Instrument,
                  slave_id: int,
                  polling_settings: PollingSettings = PollingSettings()):
 
@@ -47,15 +49,15 @@ class RegisterReaderThread(QThread):
 
             current_operating_mode = self.get_current_operation_mode()
             print(f'operation mode: address 17 = {current_operating_mode}')
-            time.sleep(0.15)
+            time.sleep(.2)
 
             current_temperature = self.get_current_temperature()
             print(f'current_temperature: address 2 = {current_temperature}')
-            time.sleep(0.15)
+            time.sleep(.2)
 
             current_program = self.get_current_temperature_program()
             print(f'current program: address 256 = {current_program}')
-            time.sleep(0.15)
+            time.sleep(.2)
 
             current_point_position = self.get_current_point_position()
             print(f'current point position: address 0 = {current_point_position}\n')
@@ -107,22 +109,20 @@ class RegisterReaderThread(QThread):
         :return: List of registers
         """
         logger.info('reading registers')
-        if not self.modbus.connected:
+        if not self.modbus:
             logger.error('no connection to modbus device')
-            self.modbus.connect()
             # self.modbus_connection_lost.emit()
-
-        response = self.modbus.read_input_registers(register.address, register.count, self.slave_id)
-        if response.isError():
-            logger.error('lost connection to modbus device')
-            self.modbus_connection_lost.emit()
         try:
-            registers = response.registers
-        except AttributeError:
-            logger.error(f'unable to read response registers, response: {response}')
+            response = self.modbus.read_registers(register.address, register.count, register.function)
+
+        except IOError:
+            logger.error(f'unable to read response registers, response')
             self.read_registers_error.emit()
             raise ReadRegistersError
-        return registers
+        if not response:
+            logger.error('lost connection to modbus device')
+            self.modbus_connection_lost.emit()
+        return response
 
     def get_current_temperature(self) -> float | None:
         """
