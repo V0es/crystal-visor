@@ -2,10 +2,12 @@ import logging
 import time
 from typing import List
 
+import serial.serialutil
 from PyQt6.QtCore import QObject, pyqtSignal, pyqtSlot
 
 from pymodbus.client import ModbusSerialClient
 from pymodbus.exceptions import ConnectionException
+from serial.serialutil import SerialException
 from minimalmodbus import Instrument
 from src.modbus.register_map import RegisterMap
 from src.modbus.register_reader import RegisterReaderThread
@@ -61,9 +63,15 @@ class TRM(QObject):
 
     @pyqtSlot(ModbusParams)
     def connect_device(self, modbus_params: ModbusParams):
-        self._init_device(modbus_params)
         logger.info('connecting to modbus')
-        state = True
+        try:
+            self._init_device(modbus_params)
+        except SerialException:
+            logger.error('unable to connect modbus: wrong serial port')
+            state = False
+
+        else:
+            state = True
         logger.info(f'connection status {state}')
         self.device_connected.emit(state)
 
@@ -97,8 +105,6 @@ class TRM(QObject):
             logger.warning('no modbus client or modbus client is not connected')
             return
 
-        # TODO: come up with an idea of storing registers
-
         try:
             self.modbus_client.write_registers(
                 self.registers.temperature_program.address,
@@ -110,9 +116,9 @@ class TRM(QObject):
                 ]
             )
         except IOError:
-            print('no response')
+            logger.error('no response from modbus')
         self.set_running_state(False)
-        time.sleep(0.5)
+        time.sleep(0.25)
         self.set_running_state(True)
         self.temperature_program_updated.emit()
 
