@@ -1,7 +1,9 @@
+import heapq
 import logging
 from collections import Counter
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from types import NoneType
+import datetime
 from typing import Dict
 
 import cv2
@@ -9,26 +11,24 @@ import numpy as np
 from PyQt6.QtCore import QObject, pyqtSlot, pyqtSignal, QThread, QRunnable
 
 logger = logging.getLogger(__name__)
+file_handler = logging.FileHandler(f'./logs/analysis/img_anlsys.log', mode='w', encoding='utf-8')
+formatter = logging.Formatter('%(asctime)s:%(name)s:%(levelname)s:%(message)s')
+file_handler.setFormatter(formatter)
+logger.addHandler(file_handler)
 
 
 @dataclass
 class AnalysisSettings:
-    red_start: int = 0
-    red_end: int = 255
-    red_speed: int = 10
+    lower_red_bgr: np.ndarray = field(default_factory=lambda: np.array([33, 39, 79]))
+    upper_red_bgr: np.ndarray = field(default_factory=lambda: np.array([60, 60, 255]))
 
-    green_start: int = 30
-    green_end: int = 100
-    green_speed: int = 5
-
-    blue_start: int = 30
-    blue_end: int = 100
-    blue_speed: int = 5
+    search_iterations: int = 1
 
     cut_off: int = 50
-    scaling: int = 320
+    scaling: int = 11.57
     base_height: float = 25
     height_gap: float = 5
+    width_gap: int = 200
 
 
 class WorkerSignals(QObject):
@@ -50,59 +50,74 @@ class ImageAnalysisWorker(QRunnable):
     def run(self):
         if isinstance(self.image, NoneType):
             return
-        primitive_dict = self.analyze_image(self.image)
-        result_dict = self.save_to_csv(primitive_dict, returned=True)
-        current_height = list(result_dict.keys())[0] * 10
+        current_height = round(self.analyze_image(self.image), 3)
         logger.info(f'current height ready: {current_height}')
         delta_height = current_height - self.settings.base_height
         if -self.settings.height_gap <= delta_height <= self.settings.height_gap:
+            logger.info('delta height is in 5mm gap, no temp adjustment needed')
             return
         self.signals.delta_height_ready.emit(delta_height)
 
-    @staticmethod
-    def save_to_csv(result_dict, returned=False) -> Dict:
-        dict_output = {}
-
-        for length, frequency in result_dict.most_common(5):
-            certainty = round(frequency / result_dict.total(), 4)
-            if returned:
-                dict_output[length] = certainty
-        if dict_output:
-            return dict_output
-
-    def analyze_image(self, image: np.ndarray) -> Counter:
+    def analyze_image(self, image: np.ndarray) -> float:
         logger.info('analyzing image')
-        width, height = image.shape[1], image.shape[0]
-        width_gap = 300
+
         center = image.shape[1] // 2
         height = image.shape[0]
 
-        image = image[self.settings.cut_off:height - self.settings.cut_off, center - width_gap:center + width_gap]
+        image = image[
+                self.settings.cut_off:height - self.settings.cut_off,
+                center - self.settings.width_gap:center + self.settings.width_gap
+                ]
 
-        upper_red = np.array([0, 0, 255])
-        graph = []
+        mask = cv2.inRange(image, self.settings.lower_red_bgr, self.settings.upper_red_bgr)
+        heights = []
 
-        for red in range(self.settings.red_start, self.settings.red_end, self.settings.red_speed):
-            lower_red = np.array([0, 0, red])
-            for i in range(self.settings.blue_start, self.settings.blue_end + 1, self.settings.blue_speed):
-                upper_red[0] = i
-                for j in range(self.settings.green_start, self.settings.green_end + 1, self.settings.green_speed):
-                    upper_red[1] = j
-                    mask = cv2.inRange(image, lower_red, upper_red)
+        for _ in range(self.settings.search_iterations):
+            # Поиск контуров
+            contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            if contours:
+                two_largest_contours = heapq.nlargest(2, contours, key=cv2.contourArea)
 
-                    contours, hierarchy = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-                    if contours:
-                        res = np.vstack(contours)
-                    else:
-                        continue
-                    length = max([k[0][1] for k in res]) - min([k[0][1] for k in res])
-                    graph.append(length)
+                for contour in two_largest_contours:
+                    x, y, w, h = cv2.boundingRect(contour)
+                    cv2.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 2)
 
-        graph = [round(int(x) / self.settings.scaling, 4)
-                 for x in graph if self.settings.cut_off < x < height - self.settings.cut_off]
-        result_dict = Counter(graph)
+                cv2.drawContours(image, two_largest_contours, -1, (0, 255, 0), 3)
+                self.save_image(image)
 
-        return result_dict
+                upper_contour, bottom_contour = two_largest_contours
+                upper_y_coords = upper_contour[:, 0, 1]
+                upper_top_point = upper_contour[np.argmin(upper_y_coords)]
+
+                bottom_y_coords = bottom_contour[:, 0, 1]
+                bottom_low_point = bottom_contour[np.argmax(bottom_y_coords)]
+
+                height = abs(upper_top_point[0][1] - bottom_low_point[0][1])
+                heights.append(height)
+
+            else:
+                print('Контуры не найдены.')
+                return 0
+
+        heights_counter = Counter(heights)
+
+        most_common_height, _ = heights_counter.most_common(1)[0]
+
+        height_in_millimeters = most_common_height / self.settings.scaling
+        return height_in_millimeters
+
+    @staticmethod
+    def save_image(image: np.ndarray):
+        """
+        Function is part of logging system
+        Saves image with timestamp in filename
+        :param image: Image to save
+        :return: None
+        """
+        time = datetime.datetime.now()
+        formatted_time = time.strftime("%H-%M-%S_%d-%m-%Y")
+        cv2.imwrite(f'./logs/analysis/imgs/{formatted_time}.png', image)
+
 
 
 
