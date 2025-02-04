@@ -83,7 +83,6 @@ class ImageAnalysisWorker(QRunnable):
                     cv2.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 2)
 
                 cv2.drawContours(image, two_largest_contours, -1, (0, 255, 0), 3)
-                self.save_image(image)
 
                 if len(two_largest_contours) < 2:
                     logger.error('could not find 2 contours')
@@ -103,6 +102,10 @@ class ImageAnalysisWorker(QRunnable):
                 print('Контуры не найдены.')
                 return 0
 
+        try:
+            self.save_image(image)
+        except Exception as e:
+            logger.error(f'unable to save image: {e}')
         heights_counter = Counter(heights)
 
         most_common_height, _ = heights_counter.most_common(1)[0]
