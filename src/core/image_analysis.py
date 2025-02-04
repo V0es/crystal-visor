@@ -85,6 +85,10 @@ class ImageAnalysisWorker(QRunnable):
                 cv2.drawContours(image, two_largest_contours, -1, (0, 255, 0), 3)
                 self.save_image(image)
 
+                if len(two_largest_contours) < 2:
+                    logger.error('could not find 2 contours')
+                    return self.settings.base_height
+
                 upper_contour, bottom_contour = two_largest_contours
                 upper_y_coords = upper_contour[:, 0, 1]
                 upper_top_point = upper_contour[np.argmin(upper_y_coords)]
