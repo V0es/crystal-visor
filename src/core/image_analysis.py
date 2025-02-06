@@ -58,59 +58,48 @@ class ImageAnalysisWorker(QRunnable):
             return
         self.signals.delta_height_ready.emit(delta_height)
 
+
     def analyze_image(self, image: np.ndarray) -> float:
         logger.info('analyzing image')
 
+        cut_off = 20
+        wight_gap = 200
+        scaling = 13.
+
+        low_hsv = (0, 160, 111)
+        high_hsv = (10, 255, 255)
+
         center = image.shape[1] // 2
         height = image.shape[0]
+        image = image[cut_off:height - cut_off, center - wight_gap:center + wight_gap]
 
-        image = image[
-                self.settings.cut_off:height - self.settings.cut_off,
-                center - self.settings.width_gap:center + self.settings.width_gap
-                ]
+        hsv_img = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+        mask = cv2.inRange(hsv_img, low_hsv, high_hsv)
 
-        mask = cv2.inRange(image, self.settings.lower_red_bgr, self.settings.upper_red_bgr)
-        heights = []
-
-        for _ in range(self.settings.search_iterations):
+        for _ in range(1):
             # Поиск контуров
             contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
             if contours:
-                two_largest_contours = heapq.nlargest(2, contours, key=cv2.contourArea)
+                largest_contour = max(contours, key=cv2.contourArea)
 
-                for contour in two_largest_contours:
-                    x, y, w, h = cv2.boundingRect(contour)
-                    cv2.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 2)
+                x, y, w, h = cv2.boundingRect(largest_contour)
+                cv2.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 2)
 
-                cv2.drawContours(image, two_largest_contours, -1, (0, 255, 0), 3)
+                cv2.drawContours(image, [largest_contour], -1, (0, 255, 0), 3)
 
-                if len(two_largest_contours) < 2:
-                    logger.error('could not find 2 contours')
-                    return self.settings.base_height
+                contour_y_coords = largest_contour[:, 0, 1]
+                contour_top_point = largest_contour[np.argmin(contour_y_coords)]
 
-                upper_contour, bottom_contour = two_largest_contours
-                upper_y_coords = upper_contour[:, 0, 1]
-                upper_top_point = upper_contour[np.argmin(upper_y_coords)]
-
-                bottom_y_coords = bottom_contour[:, 0, 1]
-                bottom_low_point = bottom_contour[np.argmax(bottom_y_coords)]
-
-                height = abs(upper_top_point[0][1] - bottom_low_point[0][1])
-                heights.append(height)
+                height = image.shape[0] - contour_top_point[0][1]
 
             else:
                 print('Контуры не найдены.')
-                return 0
-
+                height = 0
         try:
             self.save_image(image)
         except Exception as e:
             logger.error(f'unable to save image: {e}')
-        heights_counter = Counter(heights)
-
-        most_common_height, _ = heights_counter.most_common(1)[0]
-
-        height_in_millimeters = most_common_height / self.settings.scaling
+        height_in_millimeters = height / self.settings.scaling
         return height_in_millimeters
 
     @staticmethod
