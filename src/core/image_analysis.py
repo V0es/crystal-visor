@@ -111,7 +111,7 @@ class ImageAnalysisWorker(QRunnable):
         :return: None
         """
         time = datetime.datetime.now()
-        formatted_time = time.strftime("%H-%M-%S_%d-%m-%Y")
+        formatted_time = time.strftime("%d-%m-%Y_%H-%M-%S")
         cv2.imwrite(f'./logs/analysis/imgs/{formatted_time}.png', image)
 
 
